@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Kunci & konfigurasi rahasia (JANGAN di-commit)
+.env
+.env.local
+netlify-site/netlify/functions/_config.js
+
+# Cache & state Netlify (dibuat ulang otomatis oleh deploy.ps1)
+.netlify/
+netlify-site/.netlify/
+netlify-relay/.netlify/
+
+# Sisa build / OS
+*.zip
+Thumbs.db
+.DS_Store

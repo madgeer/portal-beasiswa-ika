@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donasi Beasiswa IKA UPI</title>
+  <meta name="description" content="Form donasi beasiswa alumni Universitas Pendidikan Indonesia. Pembayaran via BNI Virtual Account.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Midtrans Snap JS dimuat dinamis dari /api/health (client key ada di .env) -->
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+
+  <main class="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-10">
+
+    <!-- Header -->
+    <header class="mb-7 text-center">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-sm font-bold tracking-wide text-white shadow-sm">
+        IKA
+      </div>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Donasi Beasiswa IKA UPI</h1>
+      <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
+        Dukungan alumni untuk mahasiswa Universitas Pendidikan Indonesia.
+      </p>
+    </header>
+
+    <!-- Status backend -->
+    <div id="backendStatus" class="hidden mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed"></div>
+
+    <!-- Form -->
+    <form id="formDonasi" novalidate
+      class="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+
+      <!-- Nama -->
+      <div>
+        <label for="donorName" class="mb-1.5 block text-sm font-medium text-slate-700">Nama donatur</label>
+        <input type="text" id="donorName" name="donorName" placeholder="Contoh: Pratama (Ilkom '24)" required
+          class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+        <p class="mt-1.5 text-xs text-slate-400">Nama ini akan tampil di catatan donasi.</p>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="donorEmail" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+        <input type="email" id="donorEmail" name="donorEmail" placeholder="nama@email.com" required
+          class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+        <p class="mt-1.5 text-xs text-slate-400">Bukti donasi dikirim ke email ini.</p>
+      </div>
+
+      <!-- Nominal -->
+      <div>
+        <label for="amount" class="mb-1.5 block text-sm font-medium text-slate-700">Nominal donasi</label>
+
+        <div class="mb-2 grid grid-cols-4 gap-2">
+          <button type="button" data-amount="50000"
+            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">50rb</button>
+          <button type="button" data-amount="100000"
+            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">100rb</button>
+          <button type="button" data-amount="250000"
+            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">250rb</button>
+          <button type="button" data-amount="500000"
+            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">500rb</button>
+        </div>
+
+        <div class="relative">
+          <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">Rp</span>
+          <input type="text" id="amount" name="amount" inputmode="numeric" autocomplete="off"
+            placeholder="50.000" required
+            class="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+        </div>
+        <p id="amountError" class="mt-1.5 hidden text-xs font-medium text-red-600"></p>
+        <p id="amountHint" class="mt-1.5 text-xs text-slate-400">Minimal donasi Rp50.000.</p>
+      </div>
+
+      <!-- Pesan -->
+      <div>
+        <label for="donorNote" class="mb-1.5 block text-sm font-medium text-slate-700">
+          Pesan <span class="font-normal text-slate-400">(opsional)</span>
+        </label>
+        <textarea id="donorNote" name="donorNote" rows="2" placeholder="Semoga bermanfaat..."
+          class="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <div class="pt-1">
+        <button type="submit" id="btnSubmit"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60">
+          <span id="btnText">Lanjut ke pembayaran</span>
+        </button>
+        <p class="mt-3 text-center text-xs leading-relaxed text-slate-400">
+          Pembayaran aman via Midtrans · BNI Virtual Account
+        </p>
+      </div>
+    </form>
+
+    <p class="mt-6 text-center text-xs text-slate-400">
+      Ikatan Keluarga Alumni · Universitas Pendidikan Indonesia
+    </p>
+  </main>
+
+  <script>
+    // Semua key ada di backend; client key diambil dari /api/health.
+
+    const MIN_AMOUNT = 50000;
+
+    /* -------------------------------------------------------------- */
+    /* Deteksi backend: origin saat ini / localhost:3000 (mode lokal)  */
+    /* -------------------------------------------------------------- */
+
+    const statusEl = document.getElementById('backendStatus');
+    let apiBasePromise = null;
+
+    function cariBackend() {
+      if (apiBasePromise) return apiBasePromise;
+
+      const kandidat = [...new Set([
+        window.location.origin,
+        'http://localhost:3000',
+        'http://127.0.0.1:3000'
+      ])].filter((b) => b && b !== 'null');
+
+      apiBasePromise = (async () => {
+        for (const base of kandidat) {
+          try {
+            const r = await fetch(base + '/api/health', { cache: 'no-store' });
+            if (!r.ok) continue;
+            const data = await r.json();
+            if (data && data.ok) return { base, health: data };
+          } catch {
+            // lanjut ke kandidat berikutnya
+          }
+        }
+        return null;
+      })();
+
+      return apiBasePromise;
+    }
+
+    function tampilkanStatus(teks, jenis) {
+      const gaya = {
+        ok: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-emerald-50 border border-emerald-200 text-emerald-700',
+        warn: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-amber-50 border border-amber-200 text-amber-800',
+        err: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-red-50 border border-red-200 text-red-700'
+      };
+      statusEl.className = gaya[jenis] || gaya.warn;
+      statusEl.textContent = teks;
+      statusEl.classList.remove('hidden');
+    }
+
+    async function cekBackend() {
+      const found = await cariBackend();
+
+      if (!found) {
+        tampilkanStatus(
+          'Backend tidak terdeteksi. Jalankan "node server.js" lalu buka http://localhost:3000, '
+          + 'atau pastikan situs ini terhubung ke fungsi /api/snap.',
+          'err'
+        );
+        return null;
+      }
+
+      if (!found.health.server_key_loaded) {
+        tampilkanStatus('Backend terhubung, tetapi MIDTRANS_SERVER_KEY belum di-set.', 'warn');
+        return found;
+      }
+
+      if (!found.health.client_key) {
+        tampilkanStatus('Backend terhubung, tetapi MIDTRANS_CLIENT_KEY belum di-set.', 'warn');
+        return found;
+      }
+
+      const masalah = found.health.format_masalah || [];
+      if (masalah.length) {
+        tampilkanStatus('⚠ ' + masalah.join(' '), 'err');
+        return found;
+      }
+
+      tampilkanStatus(
+        `Siap menerima donasi · ${found.health.mode}`
+        + (found.health.server_key_hint ? ` · key ${found.health.server_key_hint}` : ''),
+        'ok'
+      );
+      return found;
+    }
+
+    /* -------------------------------------------------------------- */
+    /* Muat Snap.js pakai client key dari backend                      */
+    /* -------------------------------------------------------------- */
+
+    function muatSnap(health) {
+      if (window.snap) return Promise.resolve(true);
+      if (!health.client_key) return Promise.resolve(false);
+
+      return new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = health.snap_js_url || 'https://app.sandbox.midtrans.com/snap/snap.js';
+        s.setAttribute('data-client-key', health.client_key);
+        s.onload = () => resolve(Boolean(window.snap));
+        s.onerror = () => resolve(false);
+        document.head.appendChild(s);
+      });
+    }
+
+    cekBackend();
+
+    /* -------------------------------------------------------------- */
+    /* Input nominal: format ribuan + preset                           */
+    /* -------------------------------------------------------------- */
+
+    const amountEl = document.getElementById('amount');
+    const amountError = document.getElementById('amountError');
+    const amountHint = document.getElementById('amountHint');
+    const presetBtns = Array.from(document.querySelectorAll('[data-amount]'));
+
+    const formatRibuan = (value) =>
+      value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    function tandaiPreset(digits) {
+      presetBtns.forEach((btn) => {
+        const aktif = String(btn.dataset.amount) === String(digits);
+        btn.classList.toggle('border-blue-500', aktif);
+        btn.classList.toggle('bg-blue-50', aktif);
+        btn.classList.toggle('text-blue-700', aktif);
+        btn.classList.toggle('border-slate-200', !aktif);
+        btn.classList.toggle('text-slate-600', !aktif);
+      });
+    }
+
+    function sembunyikanError() {
+      amountError.classList.add('hidden');
+      amountHint.classList.remove('hidden');
+      amountEl.classList.remove('border-red-400', 'focus:border-red-500');
+      amountEl.classList.add('border-slate-300');
+    }
+
+    function tampilkanError(pesan) {
+      amountError.textContent = pesan;
+      amountError.classList.remove('hidden');
+      amountHint.classList.add('hidden');
+      amountEl.classList.add('border-red-400');
+      amountEl.classList.remove('border-slate-300');
+      amountEl.focus();
+    }
+
+    amountEl.addEventListener('input', () => {
+      const digits = amountEl.value.replace(/\D/g, '');
+      amountEl.value = formatRibuan(digits);
+      tandaiPreset(digits);
+      sembunyikanError();
+    });
+
+    presetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        amountEl.value = formatRibuan(btn.dataset.amount);
+        tandaiPreset(btn.dataset.amount);
+        sembunyikanError();
+      });
+    });
+
+    /* -------------------------------------------------------------- */
+    /* Submit                                                          */
+    /* -------------------------------------------------------------- */
+
+    document.getElementById('formDonasi').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('btnSubmit');
+      const btnText = document.getElementById('btnText');
+
+      const nameInput = document.getElementById('donorName').value.trim();
+      const emailInput = document.getElementById('donorEmail').value.trim();
+      const noteInput = document.getElementById('donorNote').value.trim();
+      const amountInput = Number(amountEl.value.replace(/\D/g, ''));
+
+      if (!nameInput) {
+        alert('Nama donatur wajib diisi.');
+        document.getElementById('donorName').focus();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
+        alert('Email belum valid. Contoh: nama@email.com');
+        document.getElementById('donorEmail').focus();
+        return;
+      }
+      if (!Number.isFinite(amountInput) || amountInput < MIN_AMOUNT) {
+        tampilkanError(`Minimal donasi Rp${MIN_AMOUNT.toLocaleString('id-ID')}.`);
+        return;
+      }
+
+      btn.disabled = true;
+      btnText.textContent = 'Membuat Virtual Account...';
+
+      try {
+        const found = await cekBackend();
+        if (!found) {
+          throw new Error('Backend tidak terdeteksi. Jalankan "node server.js" '
+            + 'lalu buka http://localhost:3000.');
+        }
+
+        let response;
+        try {
+          response = await fetch(found.base + '/api/snap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              name: nameInput,
+              email: emailInput,
+              amount: amountInput,
+              note: noteInput
+            })
+          });
+        } catch (networkErr) {
+          apiBasePromise = null;
+          throw new Error('Tidak bisa menghubungi backend. Cek koneksi lalu coba lagi.');
+        }
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result.token) {
+          const pesan = result.error || `Gagal membuat transaksi (HTTP ${response.status}).`;
+          const detail = result.detail || result.status_message;
+          throw new Error(detail ? `${pesan}\n\n${detail}` : pesan);
+        }
+
+        const snapSiap = await muatSnap(found.health);
+
+        if (snapSiap) {
+          window.snap.pay(result.token, {
+            onSuccess: function () { alert('Pembayaran berhasil. Terima kasih!'); },
+            onPending: function () {
+              alert('Silakan selesaikan pembayaran BNI VA.\nNomor pesanan: ' + result.order_id);
+            },
+            onError: function () { alert('Pembayaran gagal. Silakan coba lagi.'); },
+            onClose: function () {
+              alert('Jendela pembayaran ditutup. Virtual Account masih bisa dibayar '
+                + 'selama belum kedaluwarsa.');
+            }
+          });
+        } else {
+          window.location.href = result.redirect_url;
+        }
+      } catch (err) {
+        alert('Donasi gagal diproses:\n\n' + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Lanjut ke pembayaran';
+      }
+    });
+  </script>
+</body>
+</html>

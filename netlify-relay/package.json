@@ -1,0 +1,6 @@
+{
+  "name": "relay-midtrans-ika",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Relay webhook Midtrans ke Google Apps Script (membalas HTTP 200)"
+}

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Donasi — IKA UPI</title>
+  <meta name="robots" content="noindex">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+
+  <!-- ================= Gerbang kunci akses ================= -->
+  <div id="gerbang" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+    <form id="formKunci" class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+      <div class="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white">IKA</div>
+      <h1 class="text-lg font-semibold text-slate-900">Akses dashboard</h1>
+      <p class="mt-1 text-sm text-slate-500">Masukkan kunci akses untuk melihat data donasi.</p>
+
+      <label for="inputKunci" class="mt-5 block text-sm font-medium text-slate-700">Kunci akses</label>
+      <input type="password" id="inputKunci" autocomplete="current-password" placeholder="••••••••"
+        class="mt-1.5 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+
+      <p id="galatKunci" class="mt-2 hidden text-xs font-medium text-red-600"></p>
+
+      <button type="submit" id="btnMasuk"
+        class="mt-4 w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
+        Masuk
+      </button>
+      <p class="mt-3 text-center text-xs text-slate-400">
+        Kunci disimpan di <code>DASHBOARD_KEY</code> (Script Properties Apps Script).
+      </p>
+    </form>
+  </div>
+
+  <!-- ================= Header ================= -->
+  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-[10px] font-bold text-white">IKA</div>
+        <div>
+          <h1 class="text-sm font-semibold leading-tight text-slate-900">Dashboard Donasi</h1>
+          <p class="text-xs text-slate-500">Beasiswa IKA UPI</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="diperbarui" class="hidden text-xs text-slate-400 sm:inline"></span>
+        <button id="btnMuatUlang" type="button"
+          class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+          Muat ulang
+        </button>
+        <button id="btnKeluar" type="button"
+          class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+          Keluar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl space-y-5 px-4 py-6">
+
+    <!-- Pesan status -->
+    <div id="pesan" class="hidden rounded-xl border px-4 py-3 text-sm"></div>
+
+    <!-- ================= KPI ================= -->
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Total donasi</p>
+        <p id="kpiTotal" class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Rp0</p>
+        <p class="mt-1 text-xs text-slate-400">seluruh donasi tercatat</p>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Jumlah donasi</p>
+        <p id="kpiJumlah" class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">0</p>
+        <p class="mt-1 text-xs text-slate-400">transaksi lunas</p>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Rata-rata</p>
+        <p id="kpiRata" class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Rp0</p>
+        <p class="mt-1 text-xs text-slate-400">per donasi</p>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Bulan ini</p>
+        <p id="kpiBulan" class="mt-1 text-2xl font-semibold tracking-tight text-blue-700">Rp0</p>
+        <p id="kpiBulanKet" class="mt-1 text-xs text-slate-400">—</p>
+      </article>
+    </section>
+
+    <!-- ================= Grafik ================= -->
+    <section class="grid gap-4 lg:grid-cols-3">
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
+        <div class="mb-3 flex items-baseline justify-between">
+          <h2 class="text-sm font-semibold text-slate-900">Donasi 14 hari terakhir</h2>
+          <span class="text-xs text-slate-400">per hari</span>
+        </div>
+        <div class="h-56">
+          <canvas id="grafikHarian"></canvas>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mb-3 flex items-baseline justify-between">
+          <h2 class="text-sm font-semibold text-slate-900">Sebaran nominal</h2>
+          <span class="text-xs text-slate-400">jumlah donasi</span>
+        </div>
+        <div class="h-56">
+          <canvas id="grafikKomposisi"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <!-- ================= Tabel ================= -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-center gap-2">
+          <input id="cari" type="search" placeholder="Cari nama, email, atau Order ID…"
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 sm:w-72">
+
+          <select id="rentang"
+            class="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none">
+            <option value="7">7 hari</option>
+            <option value="30" selected>30 hari</option>
+            <option value="90">90 hari</option>
+            <option value="all">Semua</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span id="jumlahBaris" class="text-xs text-slate-400">0 donasi</span>
+          <button id="btnCsv" type="button"
+            class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="whitespace-nowrap px-4 py-2.5 font-medium">Waktu</th>
+              <th class="px-4 py-2.5 font-medium">Donatur</th>
+              <th class="whitespace-nowrap px-4 py-2.5 font-medium">Nominal</th>
+              <th class="hidden px-4 py-2.5 font-medium md:table-cell">Order ID</th>
+              <th class="hidden px-4 py-2.5 font-medium lg:table-cell">Pesan</th>
+              <th class="hidden whitespace-nowrap px-4 py-2.5 font-medium sm:table-cell">Status</th>
+            </tr>
+          </thead>
+          <tbody id="isiTabel" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+
+      <div id="kosong" class="hidden px-4 py-12 text-center">
+        <p class="text-sm font-medium text-slate-600">Belum ada donasi</p>
+        <p class="mt-1 text-xs text-slate-400">Data akan muncul setelah ada pembayaran yang lunas.</p>
+      </div>
+    </section>
+
+    <p class="pb-4 text-center text-xs text-slate-400">
+      Sumber data: Google Sheets · diperbarui otomatis setiap kali halaman dimuat ulang
+    </p>
+  </main>
+
+  <script>
+    /* ============================================================
+       Konfigurasi
+       ============================================================ */
+
+    const API = '/api/data';
+    const KEY_STORE = 'ikaDashboardKey';
+    const MAKS_BARIS = 500;
+
+    let semuaData = [];
+    let kunci = sessionStorage.getItem(KEY_STORE) || '';
+    let chartHarian = null;
+    let chartKomposisi = null;
+    let modeDemo = new URLSearchParams(location.search).has('demo');
+
+    const el = (id) => document.getElementById(id);
+    const rupiah = (n) => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+    const rupiahSingkat = (n) => {
+      const v = Number(n || 0);
+      if (v >= 1_000_000) return 'Rp' + (v / 1_000_000).toFixed(1).replace('.0', '') + 'jt';
+      if (v >= 1_000) return 'Rp' + Math.round(v / 1_000) + 'rb';
+      return 'Rp' + v;
+    };
+
+    const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    /* ============================================================
+       Utilitas tanggal
+       ============================================================ */
+
+    function parseWaktu(s) {
+      const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+      if (!m) return new Date(s);
+      return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+
+    const kunciHari = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const jamSekarang = () =>
+      new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    /* ============================================================
+       Ambil data
+       ============================================================ */
+
+    async function ambilData(kunciAkses) {
+      const res = await fetch(`${API}?key=${encodeURIComponent(kunciAkses)}`, { cache: 'no-store' });
+      const teks = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(teks);
+      } catch {
+        throw new Error('Balasan bukan JSON. Cek fungsi /api/data. Potongan: ' + teks.slice(0, 120));
+      }
+
+      if (data.status !== 'OK') {
+        throw new Error(data.message || 'Gagal memuat data.');
+      }
+
+      return (data.data || []).map((d) => ({ ...d, tgl: parseWaktu(d.waktu) }));
+    }
+
+    async function muatSemua() {
+      setSibuk(true);
+      try {
+        semuaData = await ambilData(kunci);
+        tutupGerbang();
+        bersihkanPesan();
+        render();
+        el('diperbarui').textContent = 'Diperbarui ' + jamSekarang();
+      } catch (err) {
+        const pesan = String(err.message || err);
+        if (/kunci|dashboards?_?key/i.test(pesan)) {
+          bukaGerbang(pesan);
+        } else {
+          tampilkanPesan('Gagal memuat data: ' + pesan, 'err');
+        }
+      } finally {
+        setSibuk(false);
+      }
+    }
+
+    function setSibuk(sibuk) {
+      el('btnMuatUlang').disabled = sibuk;
+      el('btnMuatUlang').textContent = sibuk ? 'Memuat…' : 'Muat ulang';
+    }
+
+    function tampilkanPesan(teks, jenis) {
+      const gaya = {
+        err: 'rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700',
+        ok: 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700',
+        info: 'rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700'
+      };
+      const p = el('pesan');
+      p.className = gaya[jenis] || gaya.info;
+      p.textContent = teks;
+      p.classList.remove('hidden');
+    }
+
+    const bersihkanPesan = () => el('pesan').classList.add('hidden');
+
+    /* ============================================================
+       Gerbang kunci
+       ============================================================ */
+
+    function bukaGerbang(pesan) {
+      el('gerbang').classList.remove('hidden');
+      el('gerbang').classList.add('flex');
+      el('galatKunci').classList.toggle('hidden', !pesan);
+      el('galatKunci').textContent = pesan || '';
+      el('inputKunci').focus();
+    }
+
+    function tutupGerbang() {
+      el('gerbang').classList.add('hidden');
+      el('gerbang').classList.remove('flex');
+    }
+
+    el('formKunci').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nilai = el('inputKunci').value.trim();
+      if (!nilai) return;
+
+      el('btnMasuk').disabled = true;
+      el('btnMasuk').textContent = 'Memeriksa…';
+
+      try {
+        const data = await ambilData(nilai);
+        kunci = nilai;
+        sessionStorage.setItem(KEY_STORE, nilai);
+        semuaData = data;
+        tutupGerbang();
+        bersihkanPesan();
+        render();
+        el('diperbarui').textContent = 'Diperbarui ' + jamSekarang();
+      } catch (err) {
+        el('galatKunci').classList.remove('hidden');
+        el('galatKunci').textContent = String(err.message || err);
+      } finally {
+        el('btnMasuk').disabled = false;
+        el('btnMasuk').textContent = 'Masuk';
+      }
+    });
+
+    el('btnKeluar').addEventListener('click', () => {
+      sessionStorage.removeItem(KEY_STORE);
+      kunci = '';
+      location.reload();
+    });
+
+    el('btnMuatUlang').addEventListener('click', () => {
+      if (modeDemo) { semuaData = dataContoh(); render(); return; }
+      muatSemua();
+    });
+
+    /* ============================================================
+       Render: KPI, grafik, tabel
+       ============================================================ */
+
+    function render() {
+      renderKpi();
+      renderGrafik();
+      renderTabel();
+    }
+
+    function renderKpi() {
+      const total = semuaData.reduce((a, d) => a + d.nominal, 0);
+      const jumlah = semuaData.length;
+
+      el('kpiTotal').textContent = rupiah(total);
+      el('kpiJumlah').textContent = jumlah.toLocaleString('id-ID');
+      el('kpiRata').textContent = jumlah ? rupiah(Math.round(total / jumlah)) : 'Rp0';
+
+      const kini = new Date();
+      const bulanIni = semuaData.filter(
+        (d) => d.tgl.getMonth() === kini.getMonth() && d.tgl.getFullYear() === kini.getFullYear()
+      );
+      const totalBulan = bulanIni.reduce((a, d) => a + d.nominal, 0);
+
+      el('kpiBulan').textContent = rupiah(totalBulan);
+      el('kpiBulanKet').textContent = bulanIni.length + ' donasi · ' +
+        kini.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    }
+
+    function dataTerfilter() {
+      const q = el('cari').value.toLowerCase().trim();
+      const rentang = el('rentang').value;
+      const batas = rentang === 'all' ? 0 : Date.now() - Number(rentang) * 86400000;
+
+      return semuaData.filter((d) => {
+        if (batas && d.tgl.getTime() < batas) return false;
+        if (!q) return true;
+        return `${d.nama} ${d.email} ${d.order_id} ${d.pesan}`.toLowerCase().includes(q);
+      });
+    }
+
+    function renderGrafik() {
+      if (typeof Chart === 'undefined') return;
+
+      const data = dataTerfilter();
+
+      /* --- grafik harian 14 hari --- */
+      const hari = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        hari.push({
+          kunci: kunciHari(d),
+          label: d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+          total: 0
+        });
+      }
+
+      const peta = new Map(hari.map((h) => [h.kunci, h]));
+      data.forEach((d) => {
+        const h = peta.get(kunciHari(d.tgl));
+        if (h) h.total += d.nominal;
+      });
+
+      if (chartHarian) chartHarian.destroy();
+      chartHarian = new Chart(el('grafikHarian'), {
+        type: 'bar',
+        data: {
+          labels: hari.map((h) => h.label),
+          datasets: [{
+            label: 'Donasi',
+            data: hari.map((h) => h.total),
+            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+            borderRadius: 6,
+            maxBarThickness: 26
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: { label: (c) => rupiah(c.raw) }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 }, callback: (v) => rupiahSingkat(v) }
+            }
+          }
+        }
+      });
+
+      /* --- sebaran nominal --- */
+      const kelompok = [
+        { label: '< 100rb', min: 0, max: 100000 },
+        { label: '100–250rb', min: 100000, max: 250000 },
+        { label: '250–500rb', min: 250000, max: 500000 },
+        { label: '> 500rb', min: 500000, max: Infinity }
+      ];
+
+      const hitung = kelompok.map(
+        (k) => data.filter((d) => d.nominal >= k.min && d.nominal < k.max).length
+      );
+      const adaData = hitung.some((n) => n > 0);
+
+      if (chartKomposisi) chartKomposisi.destroy();
+      chartKomposisi = new Chart(el('grafikKomposisi'), {
+        type: 'doughnut',
+        data: {
+          labels: kelompok.map((k) => k.label),
+          datasets: [{
+            data: adaData ? hitung : [1, 0, 0, 0],
+            backgroundColor: adaData
+              ? ['#93c5fd', '#60a5fa', '#3b82f6', '#1d4ed8']
+              : ['#e2e8f0', '#e2e8f0', '#e2e8f0', '#e2e8f0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 10, font: { size: 10 }, padding: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (c) => ` ${c.label}: ${adaData ? c.raw : 0} donasi`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderTabel() {
+      const data = dataTerfilter();
+      const tbody = el('isiTabel');
+      const tampil = data.slice(0, MAKS_BARIS);
+
+      el('jumlahBaris').textContent =
+        data.length.toLocaleString('id-ID') + ' donasi' +
+        (data.length > MAKS_BARIS ? ` (menampilkan ${MAKS_BARIS})` : '');
+
+      el('kosong').classList.toggle('hidden', data.length > 0);
+
+      tbody.innerHTML = tampil.map((d) => `
+        <tr class="hover:bg-slate-50/70">
+          <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
+            ${d.tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+            <span class="block text-[11px] text-slate-400">${d.tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+          </td>
+          <td class="px-4 py-3">
+            <p class="font-medium text-slate-800">${escapeHtml(d.nama || '-')}</p>
+            <p class="text-xs text-slate-400">${escapeHtml(d.email || '-')}</p>
+          </td>
+          <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">${rupiah(d.nominal)}</td>
+          <td class="hidden px-4 py-3 font-mono text-xs text-slate-500 md:table-cell">${escapeHtml(d.order_id)}</td>
+          <td class="hidden max-w-[16rem] truncate px-4 py-3 text-xs text-slate-500 lg:table-cell" title="${escapeHtml(d.pesan)}">
+            ${escapeHtml(d.pesan || '-')}
+          </td>
+          <td class="hidden px-4 py-3 sm:table-cell">
+            <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+              ${escapeHtml(d.status || 'LUNAS')}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ============================================================
+       Filter & export
+       ============================================================ */
+
+    el('cari').addEventListener('input', () => { renderGrafik(); renderTabel(); });
+    el('rentang').addEventListener('change', () => { renderGrafik(); renderTabel(); });
+
+    el('btnCsv').addEventListener('click', () => {
+      const data = dataTerfilter();
+      if (!data.length) { alert('Tidak ada data untuk diekspor.'); return; }
+
+      const kolom = ['waktu', 'order_id', 'nama', 'email', 'nominal', 'bank', 'va', 'pesan', 'status'];
+      const judul = ['Waktu', 'Order ID', 'Nama', 'Email', 'Nominal', 'Bank', 'No VA', 'Pesan', 'Status'];
+
+      const baris = [judul.join(',')].concat(
+        data.map((d) => kolom.map((k) => {
+          let v = d[k] == null ? '' : String(d[k]);
+          v = v.replace(/"/g, '""');
+          return `"${v}"`;
+        }).join(','))
+      );
+
+      const blob = new Blob(['\uFEFF' + baris.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `donasi-ika-upi-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    /* ============================================================
+       Mode demo (data contoh, tanpa kunci)
+       ============================================================ */
+
+    function dataContoh() {
+      const nama = ['Pratama', 'Rizki', 'Ayu', 'Fajar', 'Nadia', 'Bayu', 'Sari', 'Dimas', 'Intan', 'Reza'];
+      const nominal = [50000, 100000, 50000, 250000, 100000, 50000, 500000, 100000, 50000, 250000];
+
+      return nama.map((n, i) => {
+        const t = new Date();
+        t.setDate(t.getDate() - (i % 7));
+        t.setHours(8 + i, 15 + i, 0, 0);
+        return {
+          waktu: t.toISOString(),
+          tgl: t,
+          order_id: 'BNI-IKA-CONTOH-' + (100 + i),
+          bank: 'BNI',
+          va: '98871757907249' + String(10 + i),
+          nama: n,
+          nominal: nominal[i],
+          pesan: 'Semoga bermanfaat untuk adik-adik',
+          status: 'LUNAS / SUCCESS',
+          email: n.toLowerCase() + '@example.com'
+        };
+      });
+    }
+
+    /* ============================================================
+       Mulai
+       ============================================================ */
+
+    (async function mulai() {
+      if (modeDemo) {
+        semuaData = dataContoh();
+        tampilkanPesan('MODE DEMO — menampilkan data contoh, bukan data asli. Buka tanpa ?demo=1 untuk data sebenarnya.', 'info');
+        render();
+        return;
+      }
+
+      if (!kunci) {
+        bukaGerbang();
+        return;
+      }
+
+      await muatSemua();
+    })();
+  </script>
+</body>
+</html>
