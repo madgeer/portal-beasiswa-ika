@@ -13,6 +13,7 @@ atau isi manual.
 | **Form donasi (publik)** | https://donasi-beasiswa-ika-upi.netlify.app |
 | **Dashboard data** | https://donasi-beasiswa-ika-upi.netlify.app/dashboard.html |
 | **Relay notifikasi (Midtrans)** | https://relay-donasi-ika-upi.netlify.app/api/notification |
+| **Repositori** | https://github.com/madgeer/portal-beasiswa-ika |
 | **Mode** | Midtrans **Sandbox** |
 
 ---
@@ -312,10 +313,12 @@ flowchart LR
 
 | Tempat | Nilai |
 |---|---|
-| Default (di `script.gs`) | `DASHBOARD_KEY: 'ikaupi2026'` |
-| Disarankan | Script Properties → `DASHBOARD_KEY` = kunci rahasia sendiri |
+| Script Properties | `DASHBOARD_KEY` = kunci rahasia pilihanmu |
+| Di kode (`script.gs`) | sengaja kosong, karena repo ini publik |
 
-Kunci hanya disimpan di `sessionStorage` peramban dan dikirim ke server untuk diperiksa.
+Tanpa `DASHBOARD_KEY`, endpoint data menolak dengan pesan
+`DASHBOARD_KEY belum di-set di Script Properties`. Kunci hanya disimpan di `sessionStorage`
+peramban dan diperiksa di sisi server.
 
 **Penting:** endpoint data ada di `doGet`, jadi **deployment Apps Script harus versi terbaru**
 (`version: 2026-11-11`). Kalau belum, `/api/data` membalas:
@@ -340,11 +343,13 @@ Ingin melihat tampilan tanpa data asli? Buka `dashboard.html?demo=1` (data conto
 
 ## 13. Upload ke GitHub
 
-Nama repo yang disarankan:
+Nama repo:
 
 ```
-donasi-beasiswa-ika-upi
+portal-beasiswa-ika
 ```
+
+Alamat: **https://github.com/madgeer/portal-beasiswa-ika**
 
 Deskripsi repo (isi di kolom Description GitHub):
 
@@ -365,19 +370,20 @@ Copy-Item netlify-site\_config.example.js netlify-site\netlify\functions\_config
 # lalu isi MIDTRANS_SERVER_KEY + MIDTRANS_CLIENT_KEY asli di file itu
 ```
 
-### Perintah push pertama
+### Perintah push
 
 ```powershell
 cd "D:\Kuliah\semester 5\data management\Tugas\ASAH\ASAH_5"
 
-git init
 git add .
 git status          # pastikan .env dan _config.js TIDAK muncul di daftar
-git commit -m "Donasi Beasiswa IKA UPI: Midtrans BNI VA, Google Sheets, email"
-git branch -M main
-git remote add origin https://github.com/USERNAME/donasi-beasiswa-ika-upi.git
-git push -u origin main
+git commit -m "Update dashboard dan dokumentasi"
+git push
 ```
+
+Remote sudah terpasang ke `https://github.com/madgeer/portal-beasiswa-ika.git`.
+Untuk repo baru dari nol, urutannya: `git init` → `git add .` → `git commit` →
+`git branch -M main` → `git remote add origin <url>` → `git push -u origin main`.
 
 > Kalau `.env` atau `_config.js` sempat ter-commit lalu ter-push, **generate ulang key**
 > di dashboard Midtrans. Menghapus file di commit berikutnya tidak menghapus riwayat Git.

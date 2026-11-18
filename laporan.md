@@ -6,6 +6,7 @@
 | **NIM** | ⬜ *(isi NIM)* |
 | **Kelas** | ⬜ *(isi kelas)* |
 | **Mata Kuliah** | ⬜ *(isi mata kuliah)* |
+| **Repositori** | https://github.com/madgeer/portal-beasiswa-ika |
 
 ---
 

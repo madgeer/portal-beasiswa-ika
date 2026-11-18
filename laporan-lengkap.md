@@ -639,7 +639,7 @@ PORT=3000
 | Formulir donasi | https://donasi-beasiswa-ika-upi.netlify.app |
 | Relay notifikasi | https://relay-donasi-ika-upi.netlify.app/api/notification |
 | Web App Apps Script | `https://script.google.com/macros/s/AKfycb…/exec` |
-| Repositori | ⬜ *(isi URL GitHub)* |
+| Repositori | https://github.com/madgeer/portal-beasiswa-ika |
 
 ## Lampiran D — Perintah Pengujian
 

@@ -33,9 +33,9 @@ const CONFIG = {
   // true kalau baris 1 sheet berisi judul kolom (data ditulis mulai baris 2).
   HAS_HEADER_ROW: false,
 
-  // Kunci akses dashboard (bisa ditimpa Script Properties DASHBOARD_KEY).
-  // GANTI nilai ini sebelum dipakai sungguhan.
-  DASHBOARD_KEY: 'ikaupi2026',
+  // Kunci akses dashboard. WAJIB diisi lewat Script Properties DASHBOARD_KEY.
+  // Sengaja dikosongkan supaya tidak ikut terlihat di repositori publik.
+  DASHBOARD_KEY: '',
 };
 
 /* ============================== ENTRY POINT ============================== */
