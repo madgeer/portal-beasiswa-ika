@@ -62,8 +62,8 @@ Alur lengkapnya dibagi menjadi dua fase: **sebelum dibayar** (langsung, beberapa
 
 ```mermaid
 flowchart TD
-    A([Donatur buka halaman]) --> B["Isi nama, email,<br/>nominal, pesan"]
-    B --> C{"Nominal<br/>minimal 50.000?"}
+    A([Donatur buka halaman]) --> B["Pilih kategori, isi nama,<br/>email, nominal, pesan"]
+    B --> C{"Nominal<br/>minimal 10.000?"}
     C -->|tidak| B
     C -->|ya| D["Fungsi server membuat<br/>transaksi ke Midtrans"]
     D --> E["Midtrans memberi<br/>token + nomor BNI VA"]
@@ -97,8 +97,10 @@ sequenceDiagram
 
 Penjelasannya:
 
-1. **Isi formulir.** Nama dan email wajib diisi karena akan dipakai untuk bukti donasi. Nominal
-   minimal Rp50.000, dengan tombol cepat 50rb, 100rb, 250rb, dan 500rb.
+1. **Isi formulir.** Nama dan email wajib diisi karena akan dipakai untuk bukti donasi. Donatur
+   memilih kategori **Alumni** (melengkapi tahun angkatan dan program studi) atau **Umum**.
+   Nominal minimal Rp10.000, dengan tombol cepat 25rb, 50rb, 100rb, dan 250rb. Nama dapat
+   disembunyikan dan ditampilkan sebagai "Hamba Allah".
 2. **Kirim ke server.** Browser mengirim data ke `/api/snap`. Browser **tidak** tahu kunci rahasia
    Midtrans; ia hanya bertanya kepada server.
 3. **Server membuat transaksi.** Fungsi di Netlify menyusun nomor pesanan
@@ -134,7 +136,7 @@ Urutan pemeriksaan ini penting:
 | status lunas | notifikasi `pending` dan `expire` bukan donasi, jadi tidak dicatat |
 | Order ID ganda | Midtrans bisa mengirim notifikasi yang sama berkali-kali, data tidak boleh dobel |
 
-Angka **Rp50.000** dan status **settlement** adalah dua hal yang paling menentukan: nominal di bawah
+Angka **Rp10.000** dan status **settlement** adalah dua hal yang paling menentukan: nominal di bawah
 batas ditolak sebelum transaksi dibuat, dan hanya transaksi lunas yang dianggap donasi.
 
 ---
@@ -248,7 +250,7 @@ Alamat yang dipakai:
 | Notifikasi palsu | diperiksa dengan tanda tangan SHA-512 dari Midtrans |
 | Data dobel | dicek berdasarkan Order ID sebelum menulis baris |
 | Dua notifikasi datang bersamaan | penulisan dikunci (`LockService`) |
-| Nominal tidak wajar | minimal Rp50.000 divalidasi di browser dan di server |
+| Nominal tidak wajar | minimal Rp10.000 divalidasi di browser dan di server |
 
 ---
 
@@ -257,8 +259,8 @@ Alamat yang dipakai:
 | Yang diuji | Hasil |
 |---|---|
 | Halaman formulir dibuka | berhasil (HTTP 200) |
-| Donasi Rp10.000 | ditolak, "Nominal minimal Rp50.000" |
-| Donasi Rp50.000 | berhasil, dapat token dan nomor VA |
+| Donasi Rp10.000 | diterima, dapat token dan nomor VA |
+| Donasi Rp5.000 | ditolak, "Nominal minimal Rp10.000" |
 | Relay notifikasi | aktif (HTTP 200) |
 | Notifikasi dengan tanda tangan salah | ditolak |
 | Notifikasi dikirim dua kali | yang kedua dilewati |

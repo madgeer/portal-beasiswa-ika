@@ -14,7 +14,7 @@ const MIDTRANS_BASE = IS_PRODUCTION
   ? 'https://app.midtrans.com'
   : 'https://app.sandbox.midtrans.com';
 
-const MIN_AMOUNT = 50000;
+const MIN_AMOUNT = 10000;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -47,6 +47,10 @@ exports.handler = async (event) => {
   const customerName = String(body.name || 'Hamba Allah').slice(0, 50);
   const customerEmail = body.email ? String(body.email).slice(0, 50) : '';
   const note = String(body.note || 'Donasi Beasiswa Alumni').slice(0, 50);
+  const isAlumni = Boolean(body.isAlumni);
+  const nim = String(body.nim || '').trim().slice(0, 30);
+  const angkatan = isAlumni ? String(body.angkatan || '').trim().slice(0, 4) : '';
+  const prodi = isAlumni ? String(body.prodi || '').trim().slice(0, 40) : '';
 
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) {
     return json(400, { error: 'Nominal donasi tidak valid' });
@@ -68,6 +72,21 @@ exports.handler = async (event) => {
     custom_field1: note,
     custom_field2: customerName,
     custom_field3: customerEmail,
+    // Format: ALUMNI|angkatan|prodi|nim  atau  UMUM
+    custom_field4: isAlumni
+      ? ['ALUMNI', angkatan, prodi.replace(/\|/g, '/'), nim.replace(/\|/g, '/')].join('|')
+      : 'UMUM',
+    // Jalur utama: metadata bebas format dan ikut dikembalikan di notifikasi.
+    metadata: {
+      nama: customerName,
+      email: customerEmail,
+      pesan: note,
+      kategori: isAlumni ? 'ALUMNI' : 'UMUM',
+      angkatan: angkatan || '-',
+      prodi: prodi || '-',
+      nim: nim || '-',
+      hidden: Boolean(body.hidden),
+    },
   };
 
   try {

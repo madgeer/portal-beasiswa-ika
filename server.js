@@ -25,12 +25,16 @@ const PORT = Number(process.env.PORT || 3000);
 const SERVER_KEY = (process.env.MIDTRANS_SERVER_KEY || '').trim();
 const CLIENT_KEY = (process.env.MIDTRANS_CLIENT_KEY || '').trim();
 const IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === 'true';
+const GAS_URL = (
+  process.env.GAS_URL ||
+  'https://script.google.com/macros/s/AKfycbxCsCV46zYPEzuMJu8vIDzpEaLo4J1YBfKuVFr-MP1VthaiEnuFqzTux-sMVChbrpYDJQ/exec'
+).trim();
 
 const MIDTRANS_BASE = IS_PRODUCTION
   ? 'https://app.midtrans.com'
   : 'https://app.sandbox.midtrans.com';
 
-const MIN_AMOUNT = 50000;
+const MIN_AMOUNT = 10000;
 
 /* ------------------------------------------------------------------ */
 /* Cek format key: sandbox harus berawalan SB-Mid-server / SB-Mid-client */
@@ -113,6 +117,10 @@ async function handleSnap(req, res) {
   const customerName = String(body?.name || 'Hamba Allah').slice(0, 50);
   const customerEmail = body?.email ? String(body.email).slice(0, 50) : null;
   const note = String(body?.note || 'Donasi Beasiswa Alumni').slice(0, 50);
+  const isAlumni = Boolean(body?.isAlumni);
+  const nim = String(body?.nim || '').trim().slice(0, 30);
+  const angkatan = isAlumni ? String(body?.angkatan || '').trim().slice(0, 4) : '';
+  const prodi = isAlumni ? String(body?.prodi || '').trim().slice(0, 40) : '';
 
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) {
     return sendJSON(res, 400, { error: 'Nominal donasi tidak valid' });
@@ -138,6 +146,21 @@ async function handleSnap(req, res) {
     custom_field1: note,          // pesan donatur
     custom_field2: customerName,  // nama donatur -> dipakai script.gs
     custom_field3: customerEmail || '', // email donatur -> untuk notifikasi
+    // Format: ALUMNI|angkatan|prodi|nim  atau  UMUM
+    custom_field4: isAlumni
+      ? ['ALUMNI', angkatan, prodi.replace(/\|/g, '/'), nim.replace(/\|/g, '/')].join('|')
+      : 'UMUM',
+    // Jalur utama: metadata bebas format dan ikut dikembalikan di notifikasi.
+    metadata: {
+      nama: customerName,
+      email: customerEmail || '',
+      pesan: note,
+      kategori: isAlumni ? 'ALUMNI' : 'UMUM',
+      angkatan: angkatan || '-',
+      prodi: prodi || '-',
+      nim: nim || '-',
+      hidden: Boolean(body?.hidden),
+    },
   };
 
   try {
@@ -210,6 +233,74 @@ async function handleSnap(req, res) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Endpoint: cek status alumni (Google Apps Script)                   */
+/* ------------------------------------------------------------------ */
+
+async function handleCekNim(url, res) {
+  const nim = (url.searchParams.get('nim') || '').trim();
+  if (!nim) {
+    return sendJSON(res, 400, { status: 'error', message: 'Parameter nim diperlukan' });
+  }
+
+  try {
+    const fetchRes = await fetch(`${GAS_URL}?action=cek_nim&nim=${encodeURIComponent(nim)}`, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    });
+    const text = await fetchRes.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { status: 'error', message: 'Balasan Apps Script bukan JSON: ' + text.slice(0, 200) };
+    }
+    return sendJSON(res, 200, data);
+  } catch (err) {
+    console.error('[Cek NIM] error:', err);
+    return sendJSON(res, 502, {
+      status: 'error',
+      message: 'Gagal menghubungi server verifikasi alumni: ' + (err.message || String(err)),
+    });
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Endpoint: ringkasan dana kampanye (publik)                         */
+/* ------------------------------------------------------------------ */
+
+async function handleSummary(res) {
+  try {
+    const fetchRes = await fetch(`${GAS_URL}?action=summary`, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    });
+    const text = await fetchRes.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+
+    if (!data || data.status !== 'OK' || typeof data.total !== 'number') {
+      return sendJSON(res, 503, {
+        status: 'error',
+        message: 'Ringkasan dana belum tersedia.',
+      });
+    }
+
+    return sendJSON(res, 200, data);
+  } catch (err) {
+    console.error('[Ringkasan] error:', err);
+    return sendJSON(res, 502, {
+      status: 'error',
+      message: 'Tidak dapat menghubungi server ringkasan dana.',
+    });
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Static: hanya index.html                                            */
 /* ------------------------------------------------------------------ */
 
@@ -247,6 +338,12 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === '/api/snap' && req.method === 'POST') {
     return handleSnap(req, res);
+  }
+  if (url.pathname === '/api/cek-nim' && req.method === 'GET') {
+    return handleCekNim(url, res);
+  }
+  if (url.pathname === '/api/summary' && req.method === 'GET') {
+    return handleSummary(res);
   }
   if (url.pathname === '/api/health') {
     return sendJSON(res, 200, {

@@ -88,7 +88,7 @@ Midtrans Snap dengan Google Sheets dan layanan email. Sistem diberi nama **Donas
 3. Donasi bersifat **sekali bayar**, belum mendukung donasi berulang.
 4. Data disimpan pada satu spreadsheet Google, belum menggunakan basis data relasional.
 5. Belum terdapat dasbor admin dan sistem autentikasi pengguna.
-6. Nominal donasi minimal **Rp50.000**.
+6. Nominal donasi minimal **Rp10.000**.
 
 ## 1.6 Metode Pengembangan
 
@@ -179,10 +179,10 @@ sebelum menambah baris baru.
 | Kode | Kebutuhan | Keterangan |
 |---|---|---|
 | F-01 | Formulir donasi | Nama, email, nominal, dan pesan |
-| F-02 | Validasi nominal minimal | Rp50.000, divalidasi di sisi klien dan server |
+| F-02 | Validasi nominal minimal | Rp10.000, divalidasi di sisi klien dan server |
 | F-03 | Pembuatan transaksi | Token Snap dengan pembayaran `bni_va` |
 | F-04 | Penomoran otomatis | Format `BNI-IKA-<timestamp>-<random>` |
-| F-05 | Penitipan data donatur | Nama, email, pesan melalui `custom_field1..3` |
+| F-05 | Penitipan data donatur | `metadata` dan `custom_field1..4` (nama, email, pesan, angkatan, prodi, NIM) |
 | F-06 | Penerimaan notifikasi | Endpoint publik yang meneruskan ke Apps Script |
 | F-07 | Verifikasi keaslian | Pemeriksaan `signature_key` SHA-512 |
 | F-08 | Penyaringan status | Hanya `settlement` (dan `capture`/`accept`) yang dicatat |
@@ -198,7 +198,7 @@ sebelum menambah baris baru.
 | Keamanan | *Server Key* tidak pernah dikirim ke peramban; notifikasi diverifikasi tanda tangan |
 | Ketersediaan | Berjalan pada layanan awan (Netlify) sehingga dapat diakses publik |
 | Responsivitas | Tampilan menyesuaikan layar ponsel dan desktop |
-| Usabilitas | Nominal cepat (50rb–500rb), format ribuan otomatis, pesan kesalahan di dekat kolom |
+| Usabilitas | Nominal cepat (25rb–250rb), format ribuan otomatis, pesan kesalahan di dekat kolom |
 | Pemeliharaan | Setiap perubahan kode dapat di-*deploy* ulang dengan satu perintah |
 
 ## 3.3 Arsitektur Sistem
@@ -293,7 +293,7 @@ Formulir dirancang satu kolom dengan urutan: identitas donatur, nominal, pesan, 
 pembayaran. Unsur pentingnya:
 
 1. **Input nominal** berformat ribuan otomatis dan berawalan "Rp".
-2. **Tombol nominal cepat** 50rb, 100rb, 250rb, 500rb.
+2. **Tombol nominal cepat** 25rb, 50rb, 100rb, 250rb.
 3. **Validasi sebaris** (pesan merah di bawah kolom), bukan `alert`, agar tidak mengganggu.
 4. **Banner status backend** hanya muncul bila ada masalah konfigurasi.
 5. **Keadaan tombol** berubah menjadi "Membuat Virtual Account…" dan dinonaktifkan saat memproses.
@@ -306,7 +306,7 @@ pembayaran. Unsur pentingnya:
 | Notifikasi palsu | Verifikasi `signature_key` SHA-512 sebelum data diproses |
 | Data ganda akibat notifikasi berulang | Pemeriksaan `order_id` + `LockService` |
 | Penulisan bersamaan | Kunci proses (*script lock*) maksimal 30 detik |
-| Nominal tidak wajar | Validasi minimal Rp50.000 di klien dan server |
+| Nominal tidak wajar | Validasi minimal Rp10.000 di klien dan server |
 
 ---
 
@@ -316,7 +316,7 @@ pembayaran. Unsur pentingnya:
 
 | Komponen | Teknologi |
 |---|---|
-| Bahasa | JavaScript (Node.js 22), HTML, CSS (Tailwind CDN) |
+| Bahasa | JavaScript (Node.js 22), HTML, CSS tanpa framework |
 | Antarmuka | HTML tunggal `index.html` |
 | Backend lokal | `server.js` (HTTP bawaan Node.js) |
 | Backend produksi | Netlify Functions (2 situs: form dan relay) |
@@ -362,6 +362,12 @@ const payload = {
   custom_field1: note,          // pesan donatur
   custom_field2: customerName,  // nama donatur
   custom_field3: customerEmail, // email donatur
+  custom_field4: isAlumni ? `ALUMNI|${angkatan}|${prodi}|${nim}` : 'UMUM',
+  metadata: {                   // jalur utama, ikut kembali di notifikasi
+    nama: customerName, email: customerEmail, pesan: note,
+    kategori: isAlumni ? 'ALUMNI' : 'UMUM',
+    angkatan, prodi, nim
+  },
 };
 ```
 
@@ -525,8 +531,8 @@ Node.js `cek-webhook.js` yang mengirim notifikasi bertanda tangan valid.
 |---|---|---|---|---|
 | 1 | Halaman utama dibuka | `GET /` | HTTP 200 | **Sesuai** |
 | 2 | Status backend | `GET /api/health` | `{ok: true, mode: sandbox}` | **Sesuai** |
-| 3 | Nominal di bawah batas | `amount: 10000` | HTTP 400, pesan minimal | **Sesuai** — `{"error":"Nominal minimal Rp50.000"}` |
-| 4 | Nominal memenuhi batas | `amount: 50000` | HTTP 200 + token | **Sesuai** — token `d930096c-…` |
+| 3 | Nominal di bawah batas | `amount: 5000` | HTTP 400, pesan minimal | **Sesuai** — `{"error":"Nominal minimal Rp10.000"}` |
+| 4 | Nominal memenuhi batas | `amount: 25000` | HTTP 200 + token | **Sesuai** — token dibuat |
 | 5 | Relay aktif | `GET /api/notification` | HTTP 200 | **Sesuai** |
 | 6 | Notifikasi bertanda tangan valid | POST `settlement` | Diterima dan dicatat | **Sesuai** — baris bertambah, `{"status":"OK"}` |
 | 7 | Pengujian fungsi email | `tesEmail()` di editor | Dua email terkirim | **Sesuai** — `{"ke_ika":true,"ke_donatur":true}` |

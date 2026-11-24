@@ -3,111 +3,637 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Donasi Beasiswa IKA UPI</title>
-  <meta name="description" content="Form donasi beasiswa alumni Universitas Pendidikan Indonesia. Pembayaran via BNI Virtual Account.">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Midtrans Snap JS dimuat dinamis dari /api/health (client key ada di .env) -->
+  <title>Beasiswa Ikatan Alumni</title>
+  <meta name="description" content="Formulir donasi Beasiswa Ikatan Alumni. Pembayaran melalui BNI Virtual Account.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --surface: #F8F9FA;
+      --border: #E5E7EB;
+      --text: #111827;
+      --text-soft: #374151;
+      --muted: #6B7280;
+      --muted-light: #9CA3AF;
+      --accent: #0F172A;
+      --accent-hover: #1E293B;
+      --danger: #B42318;
+      --success: #14532D;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    .wrap {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 40px 24px 64px;
+    }
+
+    /* ---------- Header ---------- */
+
+    .kicker {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+
+    .lede {
+      margin: 0 0 28px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .campaign {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      background: var(--bg);
+    }
+
+    .campaign-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .campaign-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .campaign-value {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .progress {
+      height: 6px;
+      margin: 14px 0 12px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .campaign-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .campaign-meta strong {
+      font-weight: 500;
+      color: var(--text-soft);
+    }
+
+    /* ---------- Form ---------- */
+
+    form { margin-top: 32px; }
+
+    .section { margin-bottom: 26px; }
+
+    .section-head {
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .section-note {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .lbl {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-soft);
+    }
+
+    .optional {
+      font-weight: 400;
+      color: var(--muted-light);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea { resize: vertical; min-height: 72px; }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    input::placeholder,
+    textarea::placeholder { color: var(--muted-light); }
+
+    .hint {
+      margin: 7px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hint.ok { color: var(--success); }
+    .hint.err { color: var(--danger); }
+
+    .error {
+      margin: 7px 0 0;
+      font-size: 12px;
+      color: var(--danger);
+    }
+
+    /* Segmented control */
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      padding: 2px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .seg { position: relative; display: block; cursor: pointer; }
+
+    .seg input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .seg span {
+      display: block;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      border-radius: 4px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .seg input:checked + span {
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    .seg input:focus-visible + span {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    /* Inline verify row */
+
+    .inline {
+      display: flex;
+      gap: 8px;
+    }
+
+    .inline input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-secondary {
+      flex: none;
+      padding: 10px 14px;
+      background: var(--bg);
+      color: var(--text-soft);
+      border-color: var(--border);
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover { background: var(--surface); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Checkbox */
+
+    .check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: -4px 0 18px;
+      cursor: pointer;
+    }
+
+    .check input {
+      flex: none;
+      width: 16px;
+      height: 16px;
+      margin: 2px 0 0;
+      accent-color: var(--accent);
+    }
+
+    .check span {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-soft);
+    }
+
+    /* Amount */
+
+    .quick {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .quick button {
+      padding: 10px 8px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-soft);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .quick button:hover { background: var(--surface); }
+
+    .quick button[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .quick button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .amount {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .amount .prefix {
+      position: absolute;
+      left: 12px;
+      font-size: 14px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .amount input {
+      padding-left: 38px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Notice */
+
+    .notice {
+      margin-bottom: 20px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-soft);
+    }
+
+    .notice.err {
+      border-color: #FECACA;
+      background: #FEF3F2;
+      color: var(--danger);
+    }
+
+    .notice.warn {
+      border-color: #FDE68A;
+      background: #FFFBEB;
+      color: #92400E;
+    }
+
+    .notice.ok {
+      border-color: #BBF7D0;
+      background: #F0FDF4;
+      color: var(--success);
+    }
+
+    .foot {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted-light);
+    }
+
+    @media (max-width: 380px) {
+      .wrap { padding: 32px 18px 56px; }
+      h1 { font-size: 23px; }
+      .campaign-top { flex-direction: column; gap: 4px; }
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+<body>
+  <main class="wrap">
 
-  <main class="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-10">
-
-    <!-- Header -->
-    <header class="mb-7 text-center">
-      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-sm font-bold tracking-wide text-white shadow-sm">
-        IKA
-      </div>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Donasi Beasiswa IKA UPI</h1>
-      <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
-        Dukungan alumni untuk mahasiswa Universitas Pendidikan Indonesia.
+    <header>
+      <p class="kicker">Program Beasiswa</p>
+      <h1>Beasiswa Ikatan Alumni</h1>
+      <p class="lede">
+        Dana disalurkan sebagai bantuan biaya kuliah dan biaya hidup bagi mahasiswa aktif
+        yang sedang menempuh studi.
       </p>
+
+      <section class="campaign" aria-label="Ringkasan dana kampanye">
+        <div class="campaign-top">
+          <span class="campaign-label">Dana terkumpul</span>
+          <span class="campaign-value tabular" id="statTotal">&mdash;</span>
+        </div>
+        <div class="progress" id="progressBar" role="progressbar"
+             aria-label="Capaian dana" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="campaign-meta">
+          <span>Target <strong class="tabular" id="statTarget">&mdash;</strong></span>
+          <span><strong class="tabular" id="statDonatur">&mdash;</strong> donatur</span>
+        </div>
+        <p class="hint" id="campaignNote" hidden></p>
+      </section>
     </header>
 
-    <!-- Status backend -->
-    <div id="backendStatus" class="hidden mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed"></div>
+    <div id="status" class="notice" hidden></div>
 
-    <!-- Form -->
-    <form id="formDonasi" novalidate
-      class="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+    <form id="formDonasi" novalidate>
 
-      <!-- Nama -->
-      <div>
-        <label for="donorName" class="mb-1.5 block text-sm font-medium text-slate-700">Nama donatur</label>
-        <input type="text" id="donorName" name="donorName" placeholder="Contoh: Pratama (Ilkom '24)" required
-          class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
-        <p class="mt-1.5 text-xs text-slate-400">Nama ini akan tampil di catatan donasi.</p>
-      </div>
-
-      <!-- Email -->
-      <div>
-        <label for="donorEmail" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-        <input type="email" id="donorEmail" name="donorEmail" placeholder="nama@email.com" required
-          class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
-        <p class="mt-1.5 text-xs text-slate-400">Bukti donasi dikirim ke email ini.</p>
-      </div>
-
-      <!-- Nominal -->
-      <div>
-        <label for="amount" class="mb-1.5 block text-sm font-medium text-slate-700">Nominal donasi</label>
-
-        <div class="mb-2 grid grid-cols-4 gap-2">
-          <button type="button" data-amount="50000"
-            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">50rb</button>
-          <button type="button" data-amount="100000"
-            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">100rb</button>
-          <button type="button" data-amount="250000"
-            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">250rb</button>
-          <button type="button" data-amount="500000"
-            class="rounded-xl border border-slate-200 px-2 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700">500rb</button>
+      <div class="section">
+        <div class="field">
+          <span class="lbl" id="lblKategori">Kategori donatur</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="lblKategori">
+            <label class="seg">
+              <input type="radio" name="donorCategory" value="alumni" checked>
+              <span>Alumni</span>
+            </label>
+            <label class="seg">
+              <input type="radio" name="donorCategory" value="umum">
+              <span>Umum</span>
+            </label>
+          </div>
         </div>
 
-        <div class="relative">
-          <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">Rp</span>
-          <input type="text" id="amount" name="amount" inputmode="numeric" autocomplete="off"
-            placeholder="50.000" required
-            class="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10">
+        <div id="alumniFields">
+          <div class="field">
+            <label class="lbl" for="donorNim">NIM <span class="optional">(opsional)</span></label>
+            <div class="inline">
+              <input type="text" id="donorNim" inputmode="numeric" autocomplete="off"
+                     placeholder="Contoh: 2101234567">
+              <button type="button" class="btn btn-secondary" id="btnCekNim">Verifikasi</button>
+            </div>
+            <p class="hint" id="nimMsg">Verifikasi NIM untuk mengisi program studi dan angkatan secara otomatis.</p>
+          </div>
+
+          <div class="field">
+            <label class="lbl" for="angkatan">Tahun angkatan</label>
+            <input type="text" id="angkatan" inputmode="numeric" maxlength="4"
+                   autocomplete="off" placeholder="2021">
+          </div>
+
+          <div class="field">
+            <label class="lbl" for="prodi">Program studi</label>
+            <input type="text" id="prodi" list="daftarProdi" autocomplete="off"
+                   placeholder="Contoh: PGSD">
+            <datalist id="daftarProdi">
+              <option value="PGSD"></option>
+              <option value="PGPAUD"></option>
+              <option value="Pendidikan Matematika"></option>
+              <option value="Pendidikan Fisika"></option>
+              <option value="Pendidikan Kimia"></option>
+              <option value="Pendidikan Biologi"></option>
+              <option value="Pendidikan Bahasa Indonesia"></option>
+              <option value="Pendidikan Bahasa Inggris"></option>
+              <option value="Pendidikan Bahasa Jepang"></option>
+              <option value="Pendidikan Bahasa Sunda"></option>
+              <option value="Pendidikan Sejarah"></option>
+              <option value="Pendidikan Geografi"></option>
+              <option value="Pendidikan Pancasila dan Kewarganegaraan"></option>
+              <option value="Pendidikan Seni Rupa"></option>
+              <option value="Pendidikan Seni Musik"></option>
+              <option value="Pendidikan Tari"></option>
+              <option value="Pendidikan Luar Sekolah"></option>
+              <option value="Pendidikan Khusus"></option>
+              <option value="Pendidikan Teknik Mesin"></option>
+              <option value="Pendidikan Teknik Elektro"></option>
+              <option value="Pendidikan Teknik Arsitektur"></option>
+              <option value="Pendidikan Teknologi Agroindustri"></option>
+              <option value="Teknik Sipil"></option>
+              <option value="Teknik Mesin"></option>
+              <option value="Teknik Elektro"></option>
+              <option value="Teknik Kimia"></option>
+              <option value="Ilmu Komputer"></option>
+              <option value="Manajemen"></option>
+              <option value="Akuntansi"></option>
+              <option value="Ilmu Ekonomi dan Keuangan"></option>
+              <option value="Pendidikan Akuntansi"></option>
+              <option value="Pendidikan Manajemen Perkantoran"></option>
+              <option value="Pendidikan Bisnis"></option>
+              <option value="Psikologi"></option>
+              <option value="Bimbingan dan Konseling"></option>
+              <option value="Pendidikan Guru Sekolah Dasar"></option>
+              <option value="Keperawatan"></option>
+              <option value="Farmasi"></option>
+              <option value="Ilmu Keolahragaan"></option>
+              <option value="Pendidikan Jasmani"></option>
+              <option value="Desain Komunikasi Visual"></option>
+              <option value="Ilmu Komunikasi"></option>
+              <option value="Sastra Indonesia"></option>
+              <option value="Sastra Inggris"></option>
+            </datalist>
+          </div>
         </div>
-        <p id="amountError" class="mt-1.5 hidden text-xs font-medium text-red-600"></p>
-        <p id="amountHint" class="mt-1.5 text-xs text-slate-400">Minimal donasi Rp50.000.</p>
       </div>
 
-      <!-- Pesan -->
-      <div>
-        <label for="donorNote" class="mb-1.5 block text-sm font-medium text-slate-700">
-          Pesan <span class="font-normal text-slate-400">(opsional)</span>
+      <div class="section">
+        <div class="section-head">
+          <h2 class="section-title">Data donatur</h2>
+          <p class="section-note">Nama dan email digunakan untuk pencatatan serta pengiriman kuitansi.</p>
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="donorName">Nama lengkap</label>
+          <input type="text" id="donorName" autocomplete="name" placeholder="Nama sesuai identitas">
+        </div>
+
+        <label class="check" for="sembunyikanNama">
+          <input type="checkbox" id="sembunyikanNama">
+          <span>Sembunyikan nama saya (tampilkan sebagai Hamba Allah)</span>
         </label>
-        <textarea id="donorNote" name="donorNote" rows="2" placeholder="Semoga bermanfaat..."
-          class="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"></textarea>
+
+        <div class="field">
+          <label class="lbl" for="donorEmail">Email</label>
+          <input type="email" id="donorEmail" autocomplete="email" placeholder="nama@email.com">
+          <p class="hint">Kuitansi donasi dikirim otomatis ke email ini.</p>
+        </div>
       </div>
 
-      <!-- Submit -->
-      <div class="pt-1">
-        <button type="submit" id="btnSubmit"
-          class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60">
-          <span id="btnText">Lanjut ke pembayaran</span>
-        </button>
-        <p class="mt-3 text-center text-xs leading-relaxed text-slate-400">
-          Pembayaran aman via Midtrans · BNI Virtual Account
-        </p>
+      <div class="section">
+        <div class="section-head">
+          <h2 class="section-title">Nominal donasi</h2>
+          <p class="section-note">Pilih nominal cepat atau masukkan jumlah lain.</p>
+        </div>
+
+        <div class="quick" role="group" aria-label="Pilihan nominal">
+          <button type="button" data-amount="25000" aria-pressed="false">Rp25.000</button>
+          <button type="button" data-amount="50000" aria-pressed="false">Rp50.000</button>
+          <button type="button" data-amount="100000" aria-pressed="false">Rp100.000</button>
+          <button type="button" data-amount="250000" aria-pressed="false">Rp250.000</button>
+        </div>
+
+        <div class="amount">
+          <span class="prefix">Rp</span>
+          <input type="text" id="amount" inputmode="numeric" autocomplete="off"
+                 placeholder="10.000" aria-label="Nominal donasi">
+        </div>
+        <p class="hint">Minimal Rp10.000.</p>
+        <p class="error" id="amountError" hidden></p>
       </div>
+
+      <div class="section">
+        <div class="field">
+          <label class="lbl" for="donorNote">Pesan dukungan <span class="optional">(opsional)</span></label>
+          <textarea id="donorNote" rows="3" maxlength="200"
+                    placeholder="Pesan singkat untuk penerima beasiswa"></textarea>
+        </div>
+      </div>
+
+      <p class="error" id="formError" role="alert" hidden></p>
+
+      <button type="submit" class="btn btn-primary" id="btnSubmit">
+        <span id="btnText">Lanjut ke pembayaran</span>
+      </button>
+
+      <p class="foot">
+        Pembayaran diproses melalui Midtrans dengan BNI Virtual Account.
+        Data pribadi hanya digunakan untuk keperluan donasi ini.
+      </p>
     </form>
-
-    <p class="mt-6 text-center text-xs text-slate-400">
-      Ikatan Keluarga Alumni · Universitas Pendidikan Indonesia
-    </p>
   </main>
 
   <script>
-    // Semua key ada di backend; client key diambil dari /api/health.
+    const MIN_AMOUNT = 10000;
 
-    const MIN_AMOUNT = 50000;
+    const $ = (id) => document.getElementById(id);
+    const rupiah = (n) => 'Rp' + Number(n || 0).toLocaleString('id-ID');
 
-    /* -------------------------------------------------------------- */
-    /* Deteksi backend: origin saat ini / localhost:3000 (mode lokal)  */
-    /* -------------------------------------------------------------- */
-
-    const statusEl = document.getElementById('backendStatus');
+    const statusEl = $('status');
     let apiBasePromise = null;
+
+    /* ---------------------------------------------------------------- */
+    /* Deteksi backend: origin saat ini / localhost:3000 (mode lokal)    */
+    /* ---------------------------------------------------------------- */
 
     function cariBackend() {
       if (apiBasePromise) return apiBasePromise;
@@ -135,56 +661,81 @@
       return apiBasePromise;
     }
 
-    function tampilkanStatus(teks, jenis) {
-      const gaya = {
-        ok: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-emerald-50 border border-emerald-200 text-emerald-700',
-        warn: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-amber-50 border border-amber-200 text-amber-800',
-        err: 'mb-5 rounded-xl px-4 py-3 text-xs leading-relaxed bg-red-50 border border-red-200 text-red-700'
-      };
-      statusEl.className = gaya[jenis] || gaya.warn;
+    function tampilkanPesan(teks, jenis) {
+      if (!teks) {
+        statusEl.hidden = true;
+        statusEl.textContent = '';
+        return;
+      }
+      statusEl.className = 'notice ' + (jenis || '');
       statusEl.textContent = teks;
-      statusEl.classList.remove('hidden');
+      statusEl.hidden = false;
+      statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     async function cekBackend() {
       const found = await cariBackend();
 
       if (!found) {
-        tampilkanStatus(
-          'Backend tidak terdeteksi. Jalankan "node server.js" lalu buka http://localhost:3000, '
-          + 'atau pastikan situs ini terhubung ke fungsi /api/snap.',
-          'err'
+        tampilkanPesan(
+          'Layanan pembayaran belum terhubung. Form tetap dapat diisi, tetapi pembayaran belum bisa diproses.',
+          'warn'
         );
         return null;
       }
 
-      if (!found.health.server_key_loaded) {
-        tampilkanStatus('Backend terhubung, tetapi MIDTRANS_SERVER_KEY belum di-set.', 'warn');
+      if (!found.health.server_key_loaded || !found.health.client_key) {
+        tampilkanPesan('Konfigurasi pembayaran belum lengkap. Hubungi pengelola donasi.', 'warn');
         return found;
       }
 
-      if (!found.health.client_key) {
-        tampilkanStatus('Backend terhubung, tetapi MIDTRANS_CLIENT_KEY belum di-set.', 'warn');
-        return found;
-      }
-
-      const masalah = found.health.format_masalah || [];
-      if (masalah.length) {
-        tampilkanStatus('⚠ ' + masalah.join(' '), 'err');
-        return found;
-      }
-
-      tampilkanStatus(
-        `Siap menerima donasi · ${found.health.mode}`
-        + (found.health.server_key_hint ? ` · key ${found.health.server_key_hint}` : ''),
-        'ok'
-      );
       return found;
     }
 
-    /* -------------------------------------------------------------- */
-    /* Muat Snap.js pakai client key dari backend                      */
-    /* -------------------------------------------------------------- */
+    /* ---------------------------------------------------------------- */
+    /* Ringkasan kampanye (GET /api/summary)                             */
+    /* ---------------------------------------------------------------- */
+
+    function renderRingkasan(data) {
+      const total = Number(data.total) || 0;
+      const target = Number(data.target) || 0;
+      const donatur = Number(data.donatur) || 0;
+
+      $('statTotal').textContent = rupiah(total);
+      $('statTarget').textContent = target ? rupiah(target) : '\u2014';
+      $('statDonatur').textContent = donatur.toLocaleString('id-ID');
+
+      const persen = target > 0 ? Math.min(100, (total / target) * 100) : 0;
+      $('progressFill').style.width = persen.toFixed(1) + '%';
+      $('progressBar').setAttribute('aria-valuenow', String(Math.round(persen)));
+    }
+
+    async function muatRingkasan() {
+      const found = await cariBackend();
+      const bases = [...new Set([window.location.origin, found && found.base].filter(Boolean))];
+
+      for (const base of bases) {
+        try {
+          const res = await fetch(base + '/api/summary', { cache: 'no-store' });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data && data.status === 'OK' && typeof data.total === 'number') {
+            renderRingkasan(data);
+            return;
+          }
+        } catch {
+          // coba basis berikutnya
+        }
+      }
+
+      $('progressBar').hidden = true;
+      $('campaignNote').textContent = 'Ringkasan dana belum dapat dimuat saat ini.';
+      $('campaignNote').hidden = false;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* Muat Snap.js memakai client key dari backend                      */
+    /* ---------------------------------------------------------------- */
 
     function muatSnap(health) {
       if (window.snap) return Promise.resolve(true);
@@ -200,151 +751,296 @@
       });
     }
 
-    cekBackend();
+    /* ---------------------------------------------------------------- */
+    /* Kategori donatur                                                  */
+    /* ---------------------------------------------------------------- */
 
-    /* -------------------------------------------------------------- */
-    /* Input nominal: format ribuan + preset                           */
-    /* -------------------------------------------------------------- */
+    const alumniFields = $('alumniFields');
 
-    const amountEl = document.getElementById('amount');
-    const amountError = document.getElementById('amountError');
-    const amountHint = document.getElementById('amountHint');
-    const presetBtns = Array.from(document.querySelectorAll('[data-amount]'));
+    function kategoriAktif() {
+      const checked = document.querySelector('input[name="donorCategory"]:checked');
+      return checked ? checked.value : 'alumni';
+    }
 
-    const formatRibuan = (value) =>
-      value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    function perbaruiKategori() {
+      const alumni = kategoriAktif() === 'alumni';
+      alumniFields.hidden = !alumni;
+      $('angkatan').required = alumni;
+      $('prodi').required = alumni;
+      if (!alumni) {
+        $('nimMsg').className = 'hint';
+        $('nimMsg').textContent = 'Verifikasi NIM untuk mengisi program studi dan angkatan secara otomatis.';
+      }
+    }
 
-    function tandaiPreset(digits) {
-      presetBtns.forEach((btn) => {
-        const aktif = String(btn.dataset.amount) === String(digits);
-        btn.classList.toggle('border-blue-500', aktif);
-        btn.classList.toggle('bg-blue-50', aktif);
-        btn.classList.toggle('text-blue-700', aktif);
-        btn.classList.toggle('border-slate-200', !aktif);
-        btn.classList.toggle('text-slate-600', !aktif);
+    document.querySelectorAll('input[name="donorCategory"]').forEach((radio) => {
+      radio.addEventListener('change', perbaruiKategori);
+    });
+
+    perbaruiKategori();
+
+    /* ---------------------------------------------------------------- */
+    /* Verifikasi NIM alumni                                             */
+    /* ---------------------------------------------------------------- */
+
+    let alumniTerverifikasi = null;
+
+    const donorNimEl = $('donorNim');
+    const btnCekNim = $('btnCekNim');
+    const nimMsg = $('nimMsg');
+
+    async function verifikasiNim() {
+      const nim = donorNimEl.value.trim();
+
+      if (!nim) {
+        nimMsg.className = 'hint err';
+        nimMsg.textContent = 'Masukkan NIM terlebih dahulu.';
+        donorNimEl.focus();
+        return false;
+      }
+
+      btnCekNim.disabled = true;
+      btnCekNim.textContent = 'Memeriksa';
+      nimMsg.className = 'hint';
+      nimMsg.textContent = 'Memeriksa NIM...';
+
+      try {
+        const found = await cariBackend();
+        if (!found) throw new Error('Layanan verifikasi tidak terhubung');
+
+        const res = await fetch(found.base + '/api/cek-nim?nim=' + encodeURIComponent(nim));
+        const result = await res.json().catch(() => ({}));
+
+        if (result.found && result.data) {
+          alumniTerverifikasi = result.data;
+
+          if (result.data.angkatan) {
+            $('angkatan').value = String(result.data.angkatan).slice(0, 4);
+          }
+          if (result.data.prodi) {
+            $('prodi').value = String(result.data.prodi);
+          }
+
+          nimMsg.className = 'hint ok';
+          nimMsg.textContent =
+            'Terverifikasi: ' + result.data.nama +
+            ' \u00b7 ' + result.data.prodi +
+            ' \u00b7 ' + result.data.angkatan;
+          return true;
+        }
+
+        alumniTerverifikasi = null;
+        nimMsg.className = 'hint err';
+        nimMsg.textContent = result.message || 'NIM tidak terdaftar sebagai alumni.';
+        return false;
+      } catch (err) {
+        alumniTerverifikasi = null;
+        nimMsg.className = 'hint err';
+        nimMsg.textContent = 'Tidak dapat memeriksa NIM: ' + (err.message || 'koneksi gagal');
+        return false;
+      } finally {
+        btnCekNim.disabled = false;
+        btnCekNim.textContent = 'Verifikasi';
+      }
+    }
+
+    btnCekNim.addEventListener('click', verifikasiNim);
+
+    donorNimEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        verifikasiNim();
+      }
+    });
+
+    donorNimEl.addEventListener('input', () => {
+      alumniTerverifikasi = null;
+    });
+
+    /* ---------------------------------------------------------------- */
+    /* Nominal: tombol cepat + format ribuan                             */
+    /* ---------------------------------------------------------------- */
+
+    const amountEl = $('amount');
+    const amountError = $('amountError');
+    const tombolNominal = document.querySelectorAll('.quick button');
+
+    function formatRibuan(value) {
+      return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function setNominal(nilai, dariTombol) {
+      amountEl.value = formatRibuan(String(nilai || ''));
+      tombolNominal.forEach((btn) => {
+        const aktif = dariTombol && Number(btn.dataset.amount) === Number(nilai);
+        btn.setAttribute('aria-pressed', aktif ? 'true' : 'false');
       });
+      sembunyikanErrorNominal();
     }
 
-    function sembunyikanError() {
-      amountError.classList.add('hidden');
-      amountHint.classList.remove('hidden');
-      amountEl.classList.remove('border-red-400', 'focus:border-red-500');
-      amountEl.classList.add('border-slate-300');
+    function sembunyikanErrorNominal() {
+      amountError.hidden = true;
+      amountEl.style.borderColor = '';
     }
 
-    function tampilkanError(pesan) {
+    function tampilkanErrorNominal(pesan) {
       amountError.textContent = pesan;
-      amountError.classList.remove('hidden');
-      amountHint.classList.add('hidden');
-      amountEl.classList.add('border-red-400');
-      amountEl.classList.remove('border-slate-300');
-      amountEl.focus();
+      amountError.hidden = false;
+      amountEl.style.borderColor = '#B42318';
     }
+
+    tombolNominal.forEach((btn) => {
+      btn.addEventListener('click', () => setNominal(btn.dataset.amount, true));
+    });
 
     amountEl.addEventListener('input', () => {
-      const digits = amountEl.value.replace(/\D/g, '');
-      amountEl.value = formatRibuan(digits);
-      tandaiPreset(digits);
-      sembunyikanError();
+      amountEl.value = formatRibuan(amountEl.value);
+      tombolNominal.forEach((btn) => btn.setAttribute('aria-pressed', 'false'));
+      sembunyikanErrorNominal();
     });
 
-    presetBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        amountEl.value = formatRibuan(btn.dataset.amount);
-        tandaiPreset(btn.dataset.amount);
-        sembunyikanError();
-      });
-    });
+    /* ---------------------------------------------------------------- */
+    /* Submit                                                           */
+    /* ---------------------------------------------------------------- */
 
-    /* -------------------------------------------------------------- */
-    /* Submit                                                          */
-    /* -------------------------------------------------------------- */
+    const formError = $('formError');
 
-    document.getElementById('formDonasi').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function gagalValidasi(pesan, fieldId) {
+      formError.textContent = pesan;
+      formError.hidden = false;
+      const field = $(fieldId);
+      if (field) field.focus();
+      return false;
+    }
 
-      const btn = document.getElementById('btnSubmit');
-      const btnText = document.getElementById('btnText');
+    $('formDonasi').addEventListener('submit', async (event) => {
+      event.preventDefault();
 
-      const nameInput = document.getElementById('donorName').value.trim();
-      const emailInput = document.getElementById('donorEmail').value.trim();
-      const noteInput = document.getElementById('donorNote').value.trim();
-      const amountInput = Number(amountEl.value.replace(/\D/g, ''));
+      const btn = $('btnSubmit');
+      const btnText = $('btnText');
 
-      if (!nameInput) {
-        alert('Nama donatur wajib diisi.');
-        document.getElementById('donorName').focus();
+      formError.hidden = true;
+      sembunyikanErrorNominal();
+
+      const alumni = kategoriAktif() === 'alumni';
+      const sembunyikan = $('sembunyikanNama').checked;
+      const namaAsli = $('donorName').value.trim();
+      const email = $('donorEmail').value.trim();
+      const pesan = $('donorNote').value.trim();
+      const nominal = Number(amountEl.value.replace(/\D/g, ''));
+      const angkatan = alumni ? $('angkatan').value.trim() : '';
+      const prodi = alumni ? $('prodi').value.trim() : '';
+
+      if (!sembunyikan && !namaAsli) {
+        gagalValidasi('Nama lengkap wajib diisi.', 'donorName');
         return;
       }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-        alert('Email belum valid. Contoh: nama@email.com');
-        document.getElementById('donorEmail').focus();
+      if (alumni && !/^\d{4}$/.test(angkatan)) {
+        gagalValidasi('Tahun angkatan harus 4 digit, contoh 2021.', 'angkatan');
         return;
       }
-      if (!Number.isFinite(amountInput) || amountInput < MIN_AMOUNT) {
-        tampilkanError(`Minimal donasi Rp${MIN_AMOUNT.toLocaleString('id-ID')}.`);
+      if (alumni && !prodi) {
+        gagalValidasi('Program studi wajib diisi.', 'prodi');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        gagalValidasi('Email belum valid. Contoh: nama@email.com.', 'donorEmail');
+        return;
+      }
+      if (!Number.isFinite(nominal) || nominal < MIN_AMOUNT) {
+        tampilkanErrorNominal('Minimal donasi ' + rupiah(MIN_AMOUNT) + '.');
+        amountEl.focus();
         return;
       }
 
       btn.disabled = true;
-      btnText.textContent = 'Membuat Virtual Account...';
+      btnText.textContent = 'Membuat Virtual Account';
 
       try {
         const found = await cekBackend();
         if (!found) {
-          throw new Error('Backend tidak terdeteksi. Jalankan "node server.js" '
-            + 'lalu buka http://localhost:3000.');
+          throw new Error('Layanan pembayaran tidak terhubung.');
         }
+
+        const nimFinal = alumni
+          ? (alumniTerverifikasi && alumniTerverifikasi.nim ? alumniTerverifikasi.nim : donorNimEl.value.trim())
+          : '';
 
         let response;
         try {
           response = await fetch(found.base + '/api/snap', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({
-              name: nameInput,
-              email: emailInput,
-              amount: amountInput,
-              note: noteInput
+              name: sembunyikan ? 'Hamba Allah' : namaAsli,
+              email,
+              amount: nominal,
+              note: pesan,
+              isAlumni: alumni,
+              nim: nimFinal,
+              angkatan,
+              prodi,
+              hidden: sembunyikan
             })
           });
-        } catch (networkErr) {
+        } catch {
           apiBasePromise = null;
-          throw new Error('Tidak bisa menghubungi backend. Cek koneksi lalu coba lagi.');
+          throw new Error('Tidak dapat menghubungi layanan pembayaran.');
         }
 
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok || !result.token) {
-          const pesan = result.error || `Gagal membuat transaksi (HTTP ${response.status}).`;
-          const detail = result.detail || result.status_message;
-          throw new Error(detail ? `${pesan}\n\n${detail}` : pesan);
+          throw new Error(
+            result.error
+              ? result.error + (result.status_message ? '\n\n' + result.status_message : '')
+              : 'Gagal membuat transaksi (HTTP ' + response.status + ').'
+          );
         }
 
         const snapSiap = await muatSnap(found.health);
 
         if (snapSiap) {
           window.snap.pay(result.token, {
-            onSuccess: function () { alert('Pembayaran berhasil. Terima kasih!'); },
-            onPending: function () {
-              alert('Silakan selesaikan pembayaran BNI VA.\nNomor pesanan: ' + result.order_id);
+            onSuccess: function () {
+              tampilkanPesan(
+                'Pembayaran diterima. Kuitansi dikirim ke ' + email + '. Terima kasih.',
+                'ok'
+              );
             },
-            onError: function () { alert('Pembayaran gagal. Silakan coba lagi.'); },
+            onPending: function () {
+              tampilkanPesan(
+                'Selesaikan pembayaran ke Virtual Account BNI. Nomor order: ' + result.order_id + '.',
+                ''
+              );
+            },
+            onError: function () {
+              tampilkanPesan('Pembayaran gagal. Silakan coba lagi.', 'err');
+            },
             onClose: function () {
-              alert('Jendela pembayaran ditutup. Virtual Account masih bisa dibayar '
-                + 'selama belum kedaluwarsa.');
+              tampilkanPesan(
+                'Jendela pembayaran ditutup. Virtual Account masih dapat dibayar sebelum kedaluwarsa.',
+                ''
+              );
             }
           });
         } else {
           window.location.href = result.redirect_url;
         }
       } catch (err) {
-        alert('Donasi gagal diproses:\n\n' + err.message);
+        tampilkanPesan(err.message || 'Donasi gagal diproses.', 'err');
       } finally {
         btn.disabled = false;
         btnText.textContent = 'Lanjut ke pembayaran';
       }
     });
+
+    /* ---------------------------------------------------------------- */
+    /* Mulai                                                            */
+    /* ---------------------------------------------------------------- */
+
+    muatRingkasan();
+    cekBackend();
   </script>
 </body>
 </html>

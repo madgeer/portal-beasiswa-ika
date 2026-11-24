@@ -19,3 +19,15 @@
   to = "/.netlify/functions/data"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/cek-nim"
+  to = "/.netlify/functions/cek-nim"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/summary"
+  to = "/.netlify/functions/summary"
+  status = 200
+  force = true

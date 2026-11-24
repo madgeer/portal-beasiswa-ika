@@ -1,12 +1,13 @@
-# Donasi Beasiswa IKA UPI
+# Beasiswa Ikatan Alumni
 
-Form donasi online untuk Beasiswa Alumni Universitas Pendidikan Indonesia.
-Donatur mengisi nama, email, nominal, dan pesan → memilih **BNI Virtual Account** lewat
-**Midtrans Snap** → setelah dibayar, data otomatis masuk **Google Sheets** dan dua **email**
-terkirim (ke donatur dan ke pengelola IKA).
+Form donasi online untuk program beasiswa Ikatan Alumni.
+Donatur mengisi kategori, nama, email, nominal, dan pesan → memilih **BNI Virtual Account**
+lewat **Midtrans Snap** → setelah dibayar, data otomatis masuk **Google Sheets** dan dua
+**email** terkirim (ke donatur dan ke pengelola).
 
-**Minimal donasi Rp50.000.** Nominal cepat tersedia: 50rb / 100rb / 250rb / 500rb,
-atau isi manual.
+**Minimal donasi Rp10.000.** Nominal cepat tersedia: 25rb / 50rb / 100rb / 250rb,
+atau isi manual. Halaman depan menampilkan total dana terkumpul, target, dan jumlah
+donatur dari endpoint publik `GET /api/summary`.
 
 | | |
 |---|---|
@@ -95,21 +96,23 @@ Notifikasi Midtrans **tidak** mengirim `customer_details`, jadi data penting dit
 
 ```mermaid
 flowchart LR
-    A["Form<br/>nama, email, pesan"] --> B["server.js / snap.js"]
+    A["Form<br/>kategori, nama, email, pesan"] --> B["server.js / snap.js"]
     B -->|"custom_field1"| C["Pesan donatur"]
-    B -->|"custom_field2"| D["Nama donatur"]
+    B -->|"custom_field2"| D["Nama tampil<br/>(Hamba Allah bila disembunyikan)"]
     B -->|"custom_field3"| E["Email donatur"]
+    B -->|"custom_field4"| H["ALUMNI|angkatan|prodi|nim<br/>atau UMUM"]
     C --> F["Apps Script"]
     D --> F
     E --> F
-    F --> G[("Sheet: Nama & Email sesuai form")]
+    H --> F
+    F --> G[("Sheet: 13 kolom")]
 ```
 
 Contoh baris spreadsheet:
 
-| Timestamp | Order ID | Bank | No. VA | Nama | Nominal | Pesan | Status | Email |
-|---|---|---|---|---|---|---|---|---|
-| 10/11/2026 19:18 | BNI-IKA-… | BNI | 9887175790724991 | Pratama | 50000 | Halo | LUNAS / SUCCESS | pratama@mail.com |
+| Waktu | Order ID | Bank | No. VA | Nama | Nominal | Pesan | Status | Email | Kategori | NIM | Angkatan | Prodi |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 24/11/2026 09:12 | BNI-IKA-… | BNI | 9887175790724991 | Pratama | 50000 | Halo | LUNAS / SUCCESS | pratama@mail.com | Alumni | 2101234567 | 2021 | PGSD |
 
 ---
 
@@ -119,7 +122,7 @@ Contoh baris spreadsheet:
 ASAH_5/
 ├─ index.html              # Form donasi (UI) - dipakai lokal & Netlify
 ├─ dashboard.html          # Dashboard data donasi
-├─ server.js               # Backend lokal: serve form + /api/snap + /api/health
+├─ server.js               # Backend lokal: serve form + /api/snap + /api/summary + /api/health
 ├─ cek-key.js              # Utilitas: tes Server Key ke Midtrans
 ├─ cek-webhook.js          # Cek versi webhook + tes email
 ├─ cek-kanal.js            # Cek status kanal pembayaran Midtrans
@@ -135,6 +138,8 @@ ASAH_5/
 │  ├─ netlify/functions/snap.js
 │  ├─ netlify/functions/health.js
 │  ├─ netlify/functions/data.js             # data untuk dashboard
+│  ├─ netlify/functions/cek-nim.js          # verifikasi NIM alumni
+│  ├─ netlify/functions/summary.js          # total dana, target, jumlah donatur (publik)
 │  └─ deploy.ps1
 │
 └─ netlify-relay/          # Deploy relay notifikasi (302 -> 200)
@@ -293,11 +298,9 @@ Alamat: **https://donasi-beasiswa-ika-upi.netlify.app/dashboard.html**
 
 Halaman ini menampilkan isi Google Sheets dalam bentuk:
 
-- 4 kartu ringkasan: total donasi, jumlah donasi, rata-rata, dan donasi bulan ini
-- grafik batang donasi 14 hari terakhir
-- grafik donat sebaran nominal
-- tabel donasi (waktu, donatur, email, nominal, Order ID, pesan, status)
-- pencarian nama/email/Order ID, filter 7/30/90 hari, dan **Export CSV**
+- 4 ringkasan angka: total donasi, jumlah donasi, rata-rata, dan donasi bulan ini
+- tabel donasi (waktu, donatur, nominal, program studi/angkatan, Order ID, pesan, status)
+- pencarian nama/email/NIM/Order ID, filter 7/30/90 hari, dan **Ekspor CSV**
 
 ```mermaid
 flowchart LR
@@ -321,7 +324,7 @@ Tanpa `DASHBOARD_KEY`, endpoint data menolak dengan pesan
 peramban dan diperiksa di sisi server.
 
 **Penting:** endpoint data ada di `doGet`, jadi **deployment Apps Script harus versi terbaru**
-(`version: 2026-11-11`). Kalau belum, `/api/data` membalas:
+(`version: 2026-11-24`). Kalau belum, `/api/data` membalas:
 
 ```
 {"status":"error","message":"Apps Script masih versi lama (belum mendukung ?action=data)..."}
@@ -333,7 +336,7 @@ Ingin melihat tampilan tanpa data asli? Buka `dashboard.html?demo=1` (data conto
 
 ## 12. Teknologi
 
-- **Frontend:** HTML + Tailwind (CDN) + Midtrans Snap.js
+- **Frontend:** HTML + CSS (tanpa framework) + Midtrans Snap.js
 - **Backend form:** Node.js (lokal) / Netlify Functions (produksi)
 - **Pembayaran:** Midtrans Snap — BNI Virtual Account (sandbox)
 - **Pencatatan & email:** Google Apps Script + Google Sheets + MailApp

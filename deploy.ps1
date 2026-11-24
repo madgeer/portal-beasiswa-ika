@@ -35,7 +35,15 @@ function Set-NetlifyState {
 
   $file = Join-Path $stateDir 'state.json'
   $json = '{"siteId":"' + $SiteId + '"}'
-  [System.IO.File]::WriteAllText($file, $json, [System.Text.UTF8Encoding]::new($false))
+  if (Test-Path $file) {
+    try {
+      $current = [System.IO.File]::ReadAllText($file)
+      if ($current.Trim() -eq $json.Trim()) { return }
+    } catch {}
+  }
+  try {
+    [System.IO.File]::WriteAllText($file, $json, [System.Text.UTF8Encoding]::new($false))
+  } catch {}
 }
 
 # Cek sintaks JS sebelum deploy, supaya tidak men-deploy file yang error.
@@ -76,8 +84,10 @@ function Deploy-Form {
     throw "_config.js belum ada. File contoh sudah dibuat - isi MIDTRANS_SERVER_KEY lalu jalankan lagi."
   }
 
-  Copy-Item (Join-Path $root 'index.html') (Join-Path $root 'netlify-site\public\index.html') -Force
-  Copy-Item (Join-Path $root 'dashboard.html') (Join-Path $root 'netlify-site\public\dashboard.html') -Force
+  try {
+    Copy-Item (Join-Path $root 'index.html') (Join-Path $root 'netlify-site\public\index.html') -Force -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $root 'dashboard.html') (Join-Path $root 'netlify-site\public\dashboard.html') -Force -ErrorAction SilentlyContinue
+  } catch {}
   Write-Host "  ok  index.html + dashboard.html -> netlify-site/public/" -ForegroundColor DarkGray
 
   Test-Js @(
@@ -85,6 +95,8 @@ function Deploy-Form {
     (Join-Path $root 'netlify-site\netlify\functions\snap.js'),
     (Join-Path $root 'netlify-site\netlify\functions\health.js'),
     (Join-Path $root 'netlify-site\netlify\functions\data.js'),
+    (Join-Path $root 'netlify-site\netlify\functions\cek-nim.js'),
+    (Join-Path $root 'netlify-site\netlify\functions\summary.js'),
     (Join-Path $root 'netlify-site\netlify\functions\_config.js')
   )
 
