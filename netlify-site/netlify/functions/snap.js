@@ -1,5 +1,5 @@
 /**
- * POST /api/snap -> membuat transaksi Snap (BNI Virtual Account).
+ * POST /api/snap -> membuat transaksi Snap (semua metode yang aktif di Midtrans).
  * Server Key diambil dari environment variable Netlify (tidak pernah dikirim ke browser).
  *
  * Env var wajib:
@@ -59,7 +59,7 @@ exports.handler = async (event) => {
     return json(400, { error: `Nominal minimal Rp${MIN_AMOUNT.toLocaleString('id-ID')}` });
   }
 
-  const orderId = `BNI-IKA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const orderId = `DONASI-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const payload = {
     transaction_details: { order_id: orderId, gross_amount: amount },
@@ -67,7 +67,9 @@ exports.handler = async (event) => {
       first_name: customerName,
       ...(customerEmail ? { email: customerEmail } : {}),
     },
-    enabled_payments: ['bni_va'],
+    // Tanpa enabled_payments, Snap menampilkan semua kanal yang aktif
+    // di akun Midtrans (VA bank, e-wallet, QRIS, gerai retail, kartu kredit).
+    // Untuk membatasi, isi array-nya, mis. ['bni_va', 'bca_va', 'gopay'].
     // custom_field selalu dikembalikan di notifikasi Midtrans
     custom_field1: note,
     custom_field2: customerName,

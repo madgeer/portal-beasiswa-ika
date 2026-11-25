@@ -1,8 +1,8 @@
 # Beasiswa Ikatan Alumni
 
 Form donasi online untuk program beasiswa Ikatan Alumni.
-Donatur mengisi kategori, nama, email, nominal, dan pesan → memilih **BNI Virtual Account**
-lewat **Midtrans Snap** → setelah dibayar, data otomatis masuk **Google Sheets** dan dua
+Donatur mengisi kategori, nama, email, nominal, dan pesan → memilih **metode pembayaran**
+(Virtual Account bank, e-wallet, QRIS, gerai retail, atau kartu kredit) lewat **Midtrans Snap** → setelah dibayar, data otomatis masuk **Google Sheets** dan dua
 **email** terkirim (ke donatur dan ke pengelola).
 
 **Minimal donasi Rp10.000.** Nominal cepat tersedia: 25rb / 50rb / 100rb / 250rb,
@@ -11,8 +11,8 @@ donatur dari endpoint publik `GET /api/summary`.
 
 | | |
 |---|---|
-| **Form donasi (publik)** | https://donasi-beasiswa-ika-upi.netlify.app |
-| **Dashboard data** | https://donasi-beasiswa-ika-upi.netlify.app/dashboard.html |
+| **Form donasi (publik)** | https://donasi-beasiswa-ika.netlify.app |
+| **Dashboard data** | https://donasi-beasiswa-ika.netlify.app/dashboard.html |
 | **Relay notifikasi (Midtrans)** | https://relay-donasi-ika-upi.netlify.app/api/notification |
 | **Repositori** | https://github.com/madgeer/portal-beasiswa-ika |
 | **Mode** | Midtrans **Sandbox** |
@@ -28,9 +28,9 @@ flowchart LR
     S -->|"buat transaksi<br/>(Server Key)"| M[("Midtrans Snap<br/>Sandbox")]
     M -->|token| S
     S -->|token| F
-    F -->|"snap.pay(token)"| P["Popup<br/>BNI Virtual Account"]
+    F -->|"snap.pay(token)"| P["Popup pembayaran<br/>Midtrans"]
     P --> D
-    D -->|"bayar VA"| M
+    D -->|"bayar"| M
 
     M -->|"webhook settlement"| R["Relay Netlify<br/>/api/notification"]
     R -->|"POST + balas 200"| G["Google Apps Script<br/>script.gs"]
@@ -63,8 +63,8 @@ sequenceDiagram
     S->>M: buat transaksi (Server Key)
     M-->>S: token + redirect_url
     S-->>F: token
-    F->>M: snap.pay(token) → popup BNI VA
-    D->>M: bayar VA di ATM / m-banking
+    F->>M: snap.pay(token) → popup metode pembayaran
+    D->>M: bayar sesuai metode (VA, e-wallet, QRIS, gerai, kartu)
     M->>R: notifikasi settlement
     R->>A: teruskan payload lalu balas HTTP 200
     A->>SH: catat 1 baris donasi
@@ -112,7 +112,7 @@ Contoh baris spreadsheet:
 
 | Waktu | Order ID | Bank | No. VA | Nama | Nominal | Pesan | Status | Email | Kategori | NIM | Angkatan | Prodi |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 24/11/2026 09:12 | BNI-IKA-… | BNI | 9887175790724991 | Pratama | 50000 | Halo | LUNAS / SUCCESS | pratama@mail.com | Alumni | 2101234567 | 2021 | PGSD |
+| 24/11/2026 09:12 | DONASI-… | BNI | 9887175790724991 | Pratama | 50000 | Halo | LUNAS / SUCCESS | pratama@mail.com | Alumni | 2101234567 | 2021 | PGSD |
 
 ---
 
@@ -189,7 +189,7 @@ PORT=3000
 ```mermaid
 stateDiagram-v2
     [*] --> pending: token dibuat
-    pending --> settlement: VA dibayar
+    pending --> settlement: pembayaran diterima
     pending --> expire: lewat batas waktu
     settlement --> [*]: dicatat + email
     expire --> [*]: diabaikan
@@ -282,8 +282,8 @@ node cek-webhook.js --email    # kirim 1 tes: tulis sheet + 2 email
 ### 10.4 Cek hasil deploy
 
 ```powershell
-curl.exe -s -o NUL -w "%{http_code}" https://donasi-beasiswa-ika-upi.netlify.app/
-curl.exe -s https://donasi-beasiswa-ika-upi.netlify.app/api/health
+curl.exe -s -o NUL -w "%{http_code}" https://donasi-beasiswa-ika.netlify.app/
+curl.exe -s https://donasi-beasiswa-ika.netlify.app/api/health
 curl.exe -s -o NUL -w "%{http_code}" https://relay-donasi-ika-upi.netlify.app/api/notification
 ```
 
@@ -294,7 +294,7 @@ karena browser sering menyimpan versi lama halaman.
 
 ## 11. Dashboard Data Donasi
 
-Alamat: **https://donasi-beasiswa-ika-upi.netlify.app/dashboard.html**
+Alamat: **https://donasi-beasiswa-ika.netlify.app/dashboard.html**
 
 Halaman ini menampilkan isi Google Sheets dalam bentuk:
 
@@ -338,7 +338,7 @@ Ingin melihat tampilan tanpa data asli? Buka `dashboard.html?demo=1` (data conto
 
 - **Frontend:** HTML + CSS (tanpa framework) + Midtrans Snap.js
 - **Backend form:** Node.js (lokal) / Netlify Functions (produksi)
-- **Pembayaran:** Midtrans Snap — BNI Virtual Account (sandbox)
+- **Pembayaran:** Midtrans Snap — semua kanal yang aktif di akun (sandbox)
 - **Pencatatan & email:** Google Apps Script + Google Sheets + MailApp
 - **Relay:** Netlify Function (mengubah `302` menjadi `200`)
 
@@ -356,7 +356,7 @@ Alamat: **https://github.com/madgeer/portal-beasiswa-ika**
 
 Deskripsi repo (isi di kolom Description GitHub):
 
-> Form donasi beasiswa IKA UPI dengan Midtrans BNI Virtual Account, rekap otomatis ke Google Sheets, dan notifikasi email ke donatur + pengelola.
+> Form donasi beasiswa dengan Midtrans Snap (semua metode pembayaran), rekap otomatis ke Google Sheets, dan notifikasi email ke donatur + pengelola.
 
 ### File yang tidak ikut ter-upload
 

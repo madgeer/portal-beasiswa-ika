@@ -342,21 +342,48 @@ function ambilDataDonatur(data) {
 
   const statusDonatur = isAlumni ? 'Alumni' : 'Umum';
 
-  let bank = 'BNI';
+  // Metode pembayaran bisa apa saja yang aktif di akun Midtrans.
+  const tipe = String(data.payment_type || '').toLowerCase();
+
+  let bank = 'MIDTRANS';
   let vaNumber = '-';
+  let metode = 'Midtrans';
 
   if (Array.isArray(data.va_numbers) && data.va_numbers.length > 0) {
-    bank = String(data.va_numbers[0].bank || 'BNI').toUpperCase();
+    bank = String(data.va_numbers[0].bank || 'VA').toUpperCase();
     vaNumber = String(data.va_numbers[0].va_number || '-');
+    metode = bank + ' Virtual Account';
   } else if (data.permata_va_number) {
     bank = 'PERMATA';
     vaNumber = String(data.permata_va_number);
+    metode = 'Permata Virtual Account';
   } else if (data.bca_va_number) {
     bank = 'BCA';
     vaNumber = String(data.bca_va_number);
+    metode = 'BCA Virtual Account';
   } else if (data.bill_key && data.biller_code) {
     bank = 'MANDIRI';
     vaNumber = `${data.biller_code}${data.bill_key}`;
+    metode = 'Mandiri Bill Payment';
+  } else if (data.payment_code) {
+    bank = String(data.store || 'GERAI').toUpperCase();
+    vaNumber = String(data.payment_code);
+    metode = 'Gerai ' + (data.store ? String(data.store) : 'ritel');
+  } else if (tipe === 'gopay') {
+    bank = 'GOPAY';
+    metode = 'GoPay';
+  } else if (tipe === 'shopeepay') {
+    bank = 'SHOPEEPAY';
+    metode = 'ShopeePay';
+  } else if (tipe === 'qris') {
+    bank = 'QRIS';
+    metode = 'QRIS';
+  } else if (tipe === 'credit_card') {
+    bank = 'KARTU KREDIT';
+    metode = 'Kartu kredit';
+  } else if (tipe) {
+    bank = tipe.toUpperCase();
+    metode = 'Midtrans (' + tipe + ')';
   }
 
   return {
@@ -365,6 +392,7 @@ function ambilDataDonatur(data) {
     note,
     bank,
     vaNumber,
+    metode,
     amount: Number(data.gross_amount || data.amount || 0),
     paymentType: data.payment_type || 'bank_transfer',
     transactionTime: data.transaction_time || '',
@@ -443,8 +471,8 @@ function templateIka(d, orderId) {
         ${d.statusDonatur === 'Alumni' ? baris('Program Studi', d.prodi || '-') : ''}
         ${d.statusDonatur === 'Alumni' ? baris('Angkatan', d.angkatan || '-') : ''}
         ${baris('Nominal', `<b>${rupiah(d.amount)}</b>`)}
-        ${baris('Metode', `${d.bank} Virtual Account`)}
-        ${baris('Nomor VA', d.vaNumber)}
+        ${baris('Metode', d.metode || `${d.bank} Virtual Account`)}
+        ${baris('Nomor VA / Kode Bayar', d.vaNumber)}
         ${baris('Order ID', orderId)}
         ${baris('Email Donatur', d.email || '-')}
         ${baris('Pesan', d.note)}
@@ -470,8 +498,8 @@ function templateDonatur(d, orderId) {
       </p>
       <table style="width:100%;font-size:14px;border-collapse:collapse">
         ${baris('Nominal', `<b>${rupiah(d.amount)}</b>`)}
-        ${baris('Metode', `${d.bank} Virtual Account`)}
-        ${baris('Nomor VA', d.vaNumber)}
+        ${baris('Metode', d.metode || `${d.bank} Virtual Account`)}
+        ${baris('Nomor VA / Kode Bayar', d.vaNumber)}
         ${baris('Order ID', orderId)}
         ${baris('Pesan Anda', d.note)}
         ${baris('Status', 'LUNAS / SUCCESS')}

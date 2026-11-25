@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Beasiswa Ikatan Alumni</title>
-  <meta name="description" content="Formulir donasi Beasiswa Ikatan Alumni. Pembayaran melalui BNI Virtual Account.">
+  <meta name="description" content="Formulir donasi Beasiswa Ikatan Alumni. Pembayaran melalui Midtrans.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -616,7 +616,7 @@
       </button>
 
       <p class="foot">
-        Pembayaran diproses melalui Midtrans dengan BNI Virtual Account.
+        Pembayaran diproses melalui Midtrans. Metode yang tersedia muncul pada jendela pembayaran.
         Data pribadi hanya digunakan untuk keperluan donasi ini.
       </p>
     </form>
@@ -1010,7 +1010,7 @@
             },
             onPending: function () {
               tampilkanPesan(
-                'Selesaikan pembayaran ke Virtual Account BNI. Nomor order: ' + result.order_id + '.',
+                'Selesaikan pembayaran sesuai instruksi pada jendela Midtrans. Nomor order: ' + result.order_id + '.',
                 ''
               );
             },
@@ -1019,7 +1019,7 @@
             },
             onClose: function () {
               tampilkanPesan(
-                'Jendela pembayaran ditutup. Virtual Account masih dapat dibayar sebelum kedaluwarsa.',
+                'Jendela pembayaran ditutup. Transaksi masih dapat diselesaikan sebelum kedaluwarsa.',
                 ''
               );
             }

@@ -61,7 +61,7 @@ Midtrans Snap dengan Google Sheets dan layanan email. Sistem diberi nama **Donas
 
 ## 1.2 Rumusan Masalah
 
-1. Bagaimana merancang formulir donasi berbasis web yang dapat menerbitkan nomor Virtual Account BNI secara otomatis?
+1. Bagaimana merancang formulir donasi berbasis web yang dapat menerbitkan nomor pembayaran (Virtual Account dan metode lain) secara otomatis?
 2. Bagaimana memastikan data donatur (nama, email, pesan) tetap terbawa sampai ke proses pencatatan, padahal notifikasi Midtrans tidak menyertakannya?
 3. Bagaimana mencatat donasi yang berhasil dibayar ke Google Sheets secara otomatis dan aman dari duplikasi?
 4. Bagaimana mengirim bukti donasi ke donatur dan laporan donasi masuk ke pengurus IKA secara otomatis?
@@ -84,7 +84,8 @@ Midtrans Snap dengan Google Sheets dan layanan email. Sistem diberi nama **Donas
 ## 1.5 Batasan Masalah
 
 1. Sistem menggunakan **Midtrans Sandbox** (lingkungan uji coba), belum mode produksi.
-2. Metode pembayaran dibatasi pada **BNI Virtual Account**.
+2. Metode pembayaran mengikuti kanal yang aktif di akun Midtrans (Virtual Account bank,
+   e-wallet, QRIS, gerai retail, dan kartu kredit).
 3. Donasi bersifat **sekali bayar**, belum mendukung donasi berulang.
 4. Data disimpan pada satu spreadsheet Google, belum menggunakan basis data relasional.
 5. Belum terdapat dasbor admin dan sistem autentikasi pengguna.
@@ -180,7 +181,7 @@ sebelum menambah baris baru.
 |---|---|---|
 | F-01 | Formulir donasi | Nama, email, nominal, dan pesan |
 | F-02 | Validasi nominal minimal | Rp10.000, divalidasi di sisi klien dan server |
-| F-03 | Pembuatan transaksi | Token Snap dengan pembayaran `bni_va` |
+| F-03 | Pembuatan transaksi | Token Snap; metode mengikuti kanal aktif di akun Midtrans |
 | F-04 | Penomoran otomatis | Format `BNI-IKA-<timestamp>-<random>` |
 | F-05 | Penitipan data donatur | `metadata` dan `custom_field1..4` (nama, email, pesan, angkatan, prodi, NIM) |
 | F-06 | Penerimaan notifikasi | Endpoint publik yang meneruskan ke Apps Script |
@@ -210,7 +211,7 @@ flowchart LR
     S -->|"buat transaksi<br/>(Server Key)"| M[("Midtrans Snap")]
     M -->|"token"| S
     S -->|"token"| F
-    F -->|"snap.pay(token)"| V["BNI Virtual Account"]
+    F -->|"snap.pay(token)"| V["Metode pembayaran<br/>Midtrans"]
     V --> D
     D -->|"membayar VA"| M
 
@@ -320,7 +321,7 @@ pembayaran. Unsur pentingnya:
 | Antarmuka | HTML tunggal `index.html` |
 | Backend lokal | `server.js` (HTTP bawaan Node.js) |
 | Backend produksi | Netlify Functions (2 situs: form dan relay) |
-| Pembayaran | Midtrans Snap API — `bni_va` |
+| Pembayaran | Midtrans Snap API — semua kanal aktif |
 | Pencatatan | Google Sheets melalui `SpreadsheetApp` |
 | Email | `MailApp` (Google Apps Script) |
 | Editor | Visual Studio Code, PowerShell |

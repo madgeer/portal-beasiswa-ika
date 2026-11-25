@@ -129,7 +129,7 @@ async function handleSnap(req, res) {
     return sendJSON(res, 400, { error: `Nominal minimal Rp${MIN_AMOUNT.toLocaleString('id-ID')}` });
   }
 
-  const orderId = `BNI-IKA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const orderId = `DONASI-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const payload = {
     transaction_details: {
@@ -140,7 +140,8 @@ async function handleSnap(req, res) {
       first_name: customerName,
       ...(customerEmail ? { email: customerEmail } : {}),
     },
-    enabled_payments: ['bni_va'],
+    // Tanpa enabled_payments, Snap menampilkan semua kanal yang aktif
+    // di akun Midtrans. Isi array untuk membatasi pilihan.
     // Notifikasi Midtrans tidak mengirim customer_details, jadi data penting
     // dititipkan ke custom_field yang SELALU dikembalikan di webhook:
     custom_field1: note,          // pesan donatur

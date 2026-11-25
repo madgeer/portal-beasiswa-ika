@@ -1,6 +1,6 @@
 {
-  "name": "donasi-beasiswa-ika-upi",
+  "name": "donasi-beasiswa-ika",
   "version": "1.0.0",
   "private": true,
-  "description": "Form donasi beasiswa IKA UPI + Midtrans Snap (BNI VA)"
+  "description": "Form donasi beasiswa IKA + Midtrans Snap"
 }

@@ -2,7 +2,7 @@
   "name": "donasi-ika-upi",
   "version": "1.0.0",
   "private": true,
-  "description": "Form donasi beasiswa IKA UPI dengan Midtrans Snap (BNI Virtual Account)",
+  "description": "Form donasi beasiswa dengan Midtrans Snap (semua metode pembayaran)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

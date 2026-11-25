@@ -101,7 +101,7 @@ function Deploy-Form {
   )
 
   Invoke-NetlifyDeploy -Dir (Join-Path $root 'netlify-site') -SiteId $SITE_FORM -Label 'form donasi'
-  Write-Host "  https://donasi-beasiswa-ika-upi.netlify.app" -ForegroundColor Green
+  Write-Host "  https://donasi-beasiswa-ika.netlify.app" -ForegroundColor Green
 }
 
 function Deploy-Relay {

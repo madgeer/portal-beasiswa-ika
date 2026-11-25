@@ -14,7 +14,8 @@
 
 Aplikasi ini adalah **formulir donasi online** untuk mengumpulkan dana beasiswa dari alumni
 Universitas Pendidikan Indonesia. Donatur membuka satu halaman web, mengisi nama, email, nominal,
-dan pesan, lalu membayar melalui **BNI Virtual Account** yang dibuat otomatis oleh Midtrans.
+dan pesan, lalu membayar melalui **metode pembayaran Midtrans** (Virtual Account bank,
+e-wallet, QRIS, gerai retail, atau kartu kredit) yang dibuat otomatis.
 
 Setelah pembayaran selesai, aplikasi **mencatat donasi ke Google Sheets** dan **mengirim dua email**:
 bukti donasi ke donatur dan laporan ke pengurus IKA. Tidak ada proses pencatatan manual.
